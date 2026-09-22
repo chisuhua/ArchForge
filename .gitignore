@@ -1,0 +1,23 @@
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Editor
+.vscode/
+.idea/
+*.iml
+
+# Build artifacts (not applicable for doc repo, but keep for safety)
+build/
+dist/
+*.o
+*.a
+*.so
+
+# Temp
+*.tmp
+*.bak
+*.log
+/tmp/
