@@ -12,7 +12,7 @@
 | **系统架构** | `docs/architecture/` | SoC 系统级（00-overview ~ 31-nsa） | 44 |
 | **IP 微架构** | `docs/microarchitecture/` | 每 IP/模块一份接口契约（9 大类） | 54 |
 | **决策记录** | `docs/adr/` | ADR-SOC-01~24 + README + 2 支持文档 | 27 |
-| **路线图** | `docs/roadmap/` | README + 7 阶段 + 1 历史快照 | 9 |
+| **路线图** | `docs/roadmap/` | README + 7 阶段 + 1 历史快照 + 1 跨仓对齐提问单 | 10 |
 | **设计规格** | `docs/specs/` | APU 形态 spec | 1 |
 | **顶层入口** | `docs/README.md` + `docs/ADR-INDEX.md` | 仓库总览 + ADR 体系导览 | 2 |
 

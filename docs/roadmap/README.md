@@ -14,6 +14,7 @@
 | [`phase9-p2-cp-attach-via-axi.md`](./phase9-p2-cp-attach-via-axi.md) | v1.0 P2 | 🟠 跨仓 | CP 寄存器接入 + UE 双路径(Oracle REFINE + YES 决策) |
 | [`phase9-p3-strategic.md`](./phase9-p3-strategic.md) | v1.0 P3 | 🟡 战略 | ADR 修订 + Phase 9 雏形 |
 | [`phase9-p4-axi-outbound-bridge.md`](./phase9-p4-axi-outbound-bridge.md) | v1.0 P4 | 🟡 战略评估 | 通用 SoC AXI Master→PCIe Outbound 桥接缺口评估(per ADR-SOC-19,**不在 v1.0 实施范围**) |
+| [`cep-interface-alignment.md`](./cep-interface-alignment.md) | 跨仓请求 | 🟡 待答复 | **CEP ↔ ArchForge coherence 接口对齐提问单** —— 6 问(Q1 状态归属 / Q2 抽象基类归属 / Q3 snoop callback 路径 / Q4 VC 权威方 / Q5 族边界 / Q6 权限词表)+ 5 项 P0 冲突 + 答复表;来源 CppTLM CEP M2 跨仓准入门前置 |
 
 > **W 编号基准**:`W1 = 2026-09-21 (Mon)`。所有阶段文件时间表均按此基准。本目录创建于 `2026-09-16` ≈ `W37 末`,故 W25-W36 属"追溯性基线",W37+ 才是真正未来时点。
 

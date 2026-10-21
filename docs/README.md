@@ -23,14 +23,14 @@
 
 ## 1. 范围与目录结构
 
-ArchForge 共 **135 份**设计文档，按性质分为 4 大类（两大内容类 + 三大横切）：
+ArchForge 共 **136 份**设计文档，按性质分为 4 大类（两大内容类 + 三大横切）：
 
 | 类 | 目录 | 层级 | 数量 | 性质 | 受众 |
 |----|------|:----:|:----:|------|------|
 | **A. 系统架构** | `architecture/` | **SoC 系统级** | 44 | 系统级、分层、战略文档 | 架构师/评审者 |
 | **B. IP 微架构** | `microarchitecture/` | **IP 级** | 54 | 每个 IP/模块一份接口契约 | 实现者 |
 | **C. 决策记录** | `adr/` | 横切 | 27 | 24 份 ADR + README + 2 支持文档 | 架构师/评审者/集成者 |
-| **D. 路线图与规格** | `roadmap/` + `specs/` | 横切 | 10 | 阶段计划 + APU 形态 spec | 集成者/规划者 |
+| **D. 路线图与规格** | `roadmap/` + `specs/` | 横切 | 11 | 阶段计划 + APU 形态 spec + 跨仓对齐提问单 | 集成者/规划者 |
 
 ```
 ArchForge/
@@ -53,9 +53,10 @@ ArchForge/
 │   ├── ADR-SOC-01..24-*.md           ← 24 份决策记录
 │   ├── revision-plan-v1.0.md         ← ADR 修订规划
 │   └── hsk9-announcement-draft.md    ← 历史公告草稿
-├── roadmap/                          ← D 类（9 份）
+├── roadmap/                          ← D 类（10 份）
 │   ├── README.md
 │   ├── roadmap-mvp-to-v05.md         ← v0.5 历史快照（🔒 冻结）
+│   ├── cep-interface-alignment.md   ← CEP ↔ ArchForge 接口对齐提问单（🟡 待答复）
 │   └── phase9-p[0-5]-*.md            ← Phase 9 各子阶段
 └── specs/
     └── apu-soc-design.md             ← APU 形态 spec（1056 行）
@@ -92,6 +93,7 @@ ArchForge/
 │                                                                  │
 │  演进侧链 ────────────────                                       │
 │  · roadmap/phase9-p*.md       · Phase 9+ 近期计划                │
+│  · roadmap/cep-interface-alignment · CEP 跨仓接口对齐提问单      │
 │  · roadmap/roadmap-mvp-to-v05 · v0.5 历史快照                   │
 │  · architecture/20..21-*.md    · 子系统级详细（应读为子目录）    │
 │  · architecture/22..31-*.md    · NSA-aware 系列（中长期）        │
