@@ -84,6 +84,8 @@
 │  - NSA (Network-System Address): 非标准, 已用 Fabric Address 替代     │
 │  - Remote Switch: 应改为 NSA Switch                                    │
 │  - Fabric Node: 应改为 Compute Tray                                    │
+│  ────────────────────────────────────────────────────────────            │
+│  ⚠️ 术语之外还有**一维网络命名空间** → 见 §0.5.4(per-network 权威清单)     │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -126,6 +128,72 @@
 3. 草案间一致性检查:
    - 草案 A 定义了术语 X, 草案 B 引用但重新定义了 X → 报错
    - CI 检查: 草案 B 中术语 X 的定义字符串 vs 草案 A 中的定义字符串
+```
+
+### §0.5.4 Fabric 网络命名空间 (per-network 权威清单)
+
+> **🔶 复核修订 (2026-10-21, per [`ADR-SOC-25`](../adr/ADR-SOC-25-cep-aligned-coherence-architecture.md) D8 +
+> [复核回执 N-1/N-2](../roadmap/cep-interface-alignment-review-2026-10-21.md))**:
+> 本节把 §0.5 的术语治理**扩一维到「网络」**——VC 分配是 **per-network** 的,必须有单点权威的
+> **网络命名空间 + 每网络 `vc_count`**,否则跨仓组合时无从对齐。
+> **VC 分配矩阵的唯一权威**在 [`32-cep-based-coherence-architecture.md §6.0.2`](../architecture/32-cep-based-coherence-architecture.md#602-per-network-vc-分配矩阵权威);
+> 本节只承载**命名空间与槽位上界**,不重复定义分配表(遵循 §0.5.2「只引用不重复定义」)。
+
+#### §0.5.4.1 网络清单 (namespace)
+
+| `network_id` | 作用域 | 承载一致性消息 | `vc_count` | 槽位语义 (概要) | 出处 | 状态 |
+|-------------|-------|--------------|:----------:|----------------|------|:----:|
+| `compute_noc` | 片上 (单 die Mesh) | ✅ | **4** | VC0=Request / VC1=Response / VC2=Forward / VC3=Reply | `08-noc-interconnect.md §4.3` | ✅ 已锁定 |
+| `ualink_fabric` | 卡间 (跨 Compute Tray) | ✅ | **4** | VC0=Fault Request / VC1=Atomic / VC2=Remote Query / VC3=Response | `25-nsa-hardware.md §3.1/§4.3` | ✅ 已锁定 |
+| `nsa_switch` | NSA Switch 内部 | ❌ | 待定 | — | `28-cxl-3-fabric.md §1.2.4` | 🔶 待定 |
+| `cxl_fabric` | CXL 3.0 Fabric (跨机箱) | ❌ | 待定 | — | `28-cxl-3-fabric.md` | 🔶 待定 (Stage 3) |
+| `pcie_over_ualink` | 方案 B 降级路径 | ❌ | 待定 | — | `21-dist-scale-up-topology-b.md` | 🔶 待定 (降级路径) |
+
+**两条硬规则**:
+
+| # | 规则 | 理由 |
+|---|------|------|
+| **NS-R1** | **只有 `vc_count` 已锁定的网络才允许出现在 `vc_binding` / `ordering_assumption` 的 key 空间** | 未锁定的网络进入声明 → 装配期无法校验槽位上界 (`INV-CEP-12-IC2` 条件 ②) |
+| **NS-R2** | **`network_id` 是跨仓唯一标识**,由本节单点权威;网络清单的增删必须走 ADR | 跨仓组合时两侧须解析到同一 network_id |
+
+> **`nsa_switch` / `cxl_fabric` / `pcie_over_ualink` 承载一致性消息 = ❌ 的含义**:
+> NSA Switch Coherency Engine 是 **D-FABRIC 域的 Ordering Point**(per `32 号 §9.4`),但它**不是承载一致性消息的 fabric**;
+> 其一致性流量仍走 `ualink_fabric`。待某网络真正承载一致性消息时,须先在此处锁定其 `vc_count` 与槽位语义,再进 VC 分配矩阵。
+
+#### §0.5.4.2 与 CEP 声明面的对接
+
+| CEP 声明字段 | network key 空间 | 本仓权威来源 |
+|--------------|-----------------|------------|
+| `vc_binding` (消息类 → `vc_id`) | `network_id` × 消息类 | `32 号 §6.0.2` 矩阵 + §0.5.4.1 清单 |
+| `ordering_assumption` (排序假设) | `network_id` × `vc_id` | 同上 |
+| 消息类词表 (6 类) | — | `32 号 §6.0.1`(只引用,不重复定义) |
+
+**校验侧 (CEP 侧 `INV-CEP-12-IC2` 提议修订)**:
+`ordering_assumption[n]` 的每个 `vc_id` 必须 ∈ `vc_binding[n].values()`,且 `vc_binding[n].values()` 中每个 `vc_id` 必须 < 本节 §0.5.4.1 的 `vc_count`。
+→ **本节的 `vc_count` 是该校验的槽位上界来源**,故须单点权威。
+
+#### §0.5.4.3 使用规则 (与 §0.5.2 同款纪律)
+
+```
+✅ 允许: 引用本 §0.5.4.1 网络清单
+   例: "该一致性流量走 ualink_fabric (per 22-nsa-fabric-address-spec.md §0.5.4)"
+
+❌ 禁止: 在其他草案重新定义 network_id 或 vc_count
+   反例: "UALink 用 4 个 VC,VC0 是请求..."  ← 应引用 §0.5.4.1 + 32 号 §6.0.2
+
+❌ 禁止: 私自新增 network_id
+   反例: 在 28 号草案里写 "cxl3_fabric"  ← 必须先在本节登记 (NS-R2)
+```
+
+#### §0.5.4.4 漂移检测增补
+
+```
+4. PR 提交时自动检查 (增补):
+   - 提取全部 21-29 号草案 + CppTLM 侧协议实例声明中的 network_id 集合
+     → 每个 network_id 必须在本节 §0.5.4.1 清单内,否则报错
+   - 检查各草案引用的 network_id 拼写一致 (大小写 / 下划线)
+   - 校验: 出现在 vc_binding / ordering_assumption key 空间的 network_id
+     → 其 vc_count 必须非「待定」(NS-R1)
 ```
 
 ---

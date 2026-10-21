@@ -15,6 +15,53 @@
 > - **关联 ADR**:
 >   - [`ADR-SOC-01-coherence-protocol-strategy.md`](../adr/ADR-SOC-01-coherence-protocol-strategy.md) — 分步走策略
 >   - [`ADR-SOC-09-v1-nvidia-amd-dual-vendor.md`](../adr/ADR-SOC-09-v1-nvidia-amd-dual-vendor.md) D4 — v1.0 双 vendor coherence
+>   - [`ADR-SOC-25-cep-aligned-coherence-architecture.md`](../adr/ADR-SOC-25-cep-aligned-coherence-architecture.md) **D5** — `CoherenceDomain` 拆分（本文档承担 SharerTracker 侧）
+> - **CEP 对齐一致性架构**: [`docs/architecture/32-cep-based-coherence-architecture.md`](../architecture/32-cep-based-coherence-architecture.md) §9.1
+
+---
+
+## 0. CEP 定位声明（SharerTracker 选型 + caps）
+
+> **🔶 复核修订（2026-10-21，per [`ADR-SOC-25`](../adr/ADR-SOC-25-cep-aligned-coherence-architecture.md) **D5** +
+> [复核回执 F3](../roadmap/cep-interface-alignment-review-2026-10-21.md)）**
+
+### 0.1 本模块在 CEP 分层中的位置
+
+| 项 | 内容 |
+|----|------|
+| **CEP 层** | **Directory & Ordering Plane** → **SharerTracker**（per `07 号 §2.2`「目录与排序平面：地址归属解析 / sharer 跟踪 / 排序点 / 响应聚合」） |
+| **CEP 实现选型** | **`SparseSnoopFilter`**（5 种 SharerTracker 实现之一，per `ADR-CEP-04 §2`） |
+| **职责边界** | 只回答「**哪些 cache_id 需要收到该 addr 的 snoop**」；**不**维护 cache line 的**本地**状态（那是 Stub Cache Core 的事）、**不**解析 MESI/MOESI 状态 |
+
+### 0.2 `caps` 声明（4 维，per `ADR-CEP-04 §2`）
+
+| caps 维度 | 取值 | 依据 |
+|----------|------|------|
+| `scope` | `SYSTEM` | 跟踪**全系统**范围内哪些 cache 持有该 line 的副本（跨 L1/L2/TCC） |
+| `completeness` | `CONSERVATIVE` | **宁多探不漏探** —— 过滤结果允许超集，**不得**漏 sharer（`ADR-CEP-04` DCOH 完备性契约同款） |
+| `authority` | `GLOBAL` | sharer 集合是**全局权威**的（不是本地提示） |
+| `aggregation_at` | `HOME` | sharer 集合在 **Home 侧**聚合（snoop 由 Home 发起并广播给 sharer） |
+
+> **与 CEP `SparseSnoopFilter` 基准值一致**（per `ADR-CEP-04 §2` 表：`SYSTEM` / `CONSERVATIVE` / `GLOBAL` / `HOME`）——
+> 即本模块**就是** CEP 声明中的 `SparseSnoopFilter` 实现，无需另立选型。
+> 协议实例声明中的引用见 [`32 号 §6.1`](../architecture/32-cep-based-coherence-architecture.md#61-实例-1moesi_gpu)（`moesi_gpu` 的 `sharer_tracker`）。
+
+### 0.3 与 `09-coherence-protocol.md §7.2` 的结构归并（批 2 联动）
+
+本仓对 `SnoopFilter` 存在**两套结构描述**：
+
+| 出处 | 结构 | 状态 |
+|------|------|:----:|
+| `09-coherence-protocol.md §7.2` | `SnoopEntry { uint64_t addr; std::vector<uint16_t> sharers; State shared_state; }` | ⏳ **批 2 返工时归并**（`09` 含 CI 锚点，须与 CppTLM 侧锚点重生成同批） |
+| **本文档 §3**（`SnoopFilterTLM` / `SnoopFilterCacheTLM`） | `FilterEntry { uint64_t addr; std::bitset<16> sharers; CoherenceState state; uint64_t lru_counter; }` + `get_snoop_targets() / update_sharer() / invalidate() / get_table_size()` | ✅ **本文档为准（authoritative）** |
+
+**归并裁决**：以**本文档 §3** 为准（它更接近 CEP `SparseSnoopFilter` 语义：含替换策略 + LRU + 明确的查询接口）。
+`09 §7.2` 的 `SnoopEntry` 是**同义异构**（`vector<sharers>` vs `bitset<16>`、有/无 LRU、共享状态字段名不同），**批 2 将其删除并指向本文档**。
+
+> ⚠️ **批 1 / 批 2 边界**：本文件**不含**任何 CppTLM CI 锚点 → 批 1 单独提交安全；
+> `09-coherence-protocol.md` 含 5 个锚点 → **必须留到批 2**（与 CppTLM 侧 `2026-10-21-cep-archforge-interface-alignment.md`
+> 的 21 个 `archforge` 锚点重生成**同批**），否则中间态 CI 必红。
+> 详见 [`ADR-SOC-25 §3.1`](../adr/ADR-SOC-25-cep-aligned-coherence-architecture.md#31-本仓文档返工清单9-份)。
 
 ---
 
@@ -342,4 +389,6 @@ void SnoopFilterCacheTLM::update_sharer(uint64_t addr, uint32_t cache_id,
 - **2026-06-11**: 蓝图初版（来自调研 §2.4）
 - **2026-06-12**: B3 批次设计 — 提取 D1-D4 + 蓝图对齐 + 风险列表
 - **Phase 7.C (未来)**: 基础版实施（2 种实现 + CoherentXBar 集成）
+- **2026-10-21**: **CEP 对齐修订（批 1）** —— 新增 §0 CEP 定位声明：明确本模块 = CEP `SparseSnoopFilter` 选型 + 4 维 `caps` 声明；
+  裁决以本文档 §3 的 `FilterEntry` 为准（`09 §7.2` 的 `SnoopEntry` 归并留待批 2，与 CppTLM 侧 CI 锚点重生成同批）
 - **Phase 7.D (未来)**: TCC + GPU 域 snoop 集成
