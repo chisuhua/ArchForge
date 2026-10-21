@@ -2,7 +2,7 @@
 
 > **版本**: 2.4
 > **创建日期**: 2026-06-14
-> **更新日期**: 2026-10-21（新增 ADR-SOC-25：一致性架构改采 CEP 框架对齐 —— 跨仓答复 CppTLM CEP 提问单）
+> **更新日期**: 2026-10-21（新增 ADR-SOC-25：一致性架构改采 CEP 框架对齐 —— 跨仓答复 CppTLM CEP 提问单；复核轮 N-1~N-4 裁决完毕 → ✅ Accepted）
 > **范围**: CppTLM SoC 仿真架构决策（CPU/GPU/IO/Cache/NoC 集成层）
 > **与 `docs/adr/` 的关系**: 本目录存放**应用层（SoC 设计）**决策；`docs/adr/` 存放**框架层（仿真基础设施）**决策。两层分离，避免 SoC 决策与框架决策混淆。
 
@@ -42,7 +42,7 @@
 | [ADR-SOC-22-nsa-fabric-address-format.md](./ADR-SOC-22-nsa-fabric-address-format.md) | **NSA-aware 64-bit Fabric Address 格式**（保留 NSA 族名 + 地址格式学名采用 CXL 3.0 Fabric Address 16+48 bits；HRT Entry 32-bit 字段位分配 per D3；per OpenSpec `2026-09-19-cpptlm-nsa-scale-up-umbrella`） | 📋 Proposed | NSA Stage 1 (2026-2027) |
 | [ADR-SOC-23-nsa-vs-plan-b-selection.md](./ADR-SOC-23-nsa-vs-plan-b-selection.md) | **NSA-aware 分布式 Scale-Up vs 方案 B 选型**（主选方案 C + 方案 B 降级；Stage 1 严格 TLM 功能模型层；per OpenSpec `2026-09-19-cpptlm-nsa-scale-up-umbrella`） | 📋 Proposed | NSA Stage 1-3 (2026-2029) |
 | [ADR-SOC-24-capability-based-multitenant-isolation.md](./ADR-SOC-24-capability-based-multitenant-isolation.md) | **Capability-Based 多租户隔离选型**（128 bits Token + HW 校验 + 5 阶段生命周期；Stage 1 推迟 HW 强制校验到 Stage 2；per OpenSpec `2026-09-19-cpptlm-nsa-scale-up-umbrella`） | 📋 Proposed | NSA Stage 1-3 (2026-2029) |
-| [ADR-SOC-25-cep-aligned-coherence-architecture.md](./ADR-SOC-25-cep-aligned-coherence-architecture.md) | **一致性架构改采 CEP 框架对齐**（协议逻辑下沉为 CppTLM ProtocolEngine 插件 + 能力以数据声明 + 一致性域重划为 D-CPU/D-GPU/D-FABRIC 3 域 + 撤下 `snoop_callback` 直连 + P0-3 映射表 + 对 CEP 的 R-1~R-12 需求单；per CppTLM CEP 提问单答复轮） | 📋 Proposed | 跨仓答复轮 (2026-10-21) |
+| [ADR-SOC-25-cep-aligned-coherence-architecture.md](./ADR-SOC-25-cep-aligned-coherence-architecture.md) | **一致性架构改采 CEP 框架对齐**（协议逻辑下沉为 CppTLM ProtocolEngine 插件 + 能力以数据声明 + 一致性域重划为 D-CPU/D-GPU/D-FABRIC 3 域 + 撤下 `snoop_callback` 直连 + P0-3 映射表 + **per-network VC 分配矩阵** + 对 CEP 的 R-1~R-13 需求单；per CppTLM CEP 提问单答复轮 + [复核回执 N-1~N-4](../roadmap/cep-interface-alignment-review-2026-10-21.md)） | ✅ Accepted | 跨仓答复轮 (2026-10-21) |
 
 ## 与 `docs/adr/ADR-X.17-cpptlm-v05-mvp.md` 的 cross-reference(已迁回本目录)
 

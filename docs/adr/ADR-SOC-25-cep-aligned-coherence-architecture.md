@@ -1,6 +1,6 @@
 # ADR-SOC-25: 一致性架构改采 CEP 框架对齐（协议插件化 + 能力声明 + 域重划）
 
-> **状态**: 📋 Proposed — 2026-10-21
+> **状态**: ✅ **Accepted** — 2026-10-21（决策 D1~D11 已拍板；**文档返工 D-9 为后果非前置**，跟踪项见 §5）
 > **日期**: 2026-10-21
 > **Owner**: ArchForge Team (coherence owner)
 > **影响**: L7 Coherence 子系统架构（09 号）+ NSA 跨卡一致性（25/30 号）+ 跨仓协作（CppTLM CEP）
@@ -185,12 +185,36 @@ per `ADR-CEP-13` 决策 1：一致性域 = 一个 Ordering Point 生效 + 一套
 | 子项 | 权威方 | 依据 |
 |------|--------|------|
 | `vc_id` 命名空间（0-3） | **本仓 / CppTLM NoC Bundle 层**（已存在） | `noc_bundles_tlm.hh:38` + `08-noc-interconnect.md:205-212`；与 CEP schema 的 0..3 **同域** |
-| 各网络的排序属性 | **本仓声明**（逐网络） | `08 §4.1`；NSA Switch PBR |
-| 消息类 → `vc_id` 绑定表 | **协议实例声明**（CEP schema 承载） | 绑定是协议属性 |
+| **网络清单 + 每网络 `vc_count`** | **本仓**（fabric config 输入） | `22-nsa §0.5` Glossary 扩 network 维度（**R-5'**） |
+| 各网络各 VC 的排序属性 | **本仓声明**（逐网络 × 逐 VC） | `08 §4.1`；`ADR-CEP-12` 决策 5「排序是 **VC 的静态属性**」 |
+| 消息类 → `vc_id`（逐网络） | **协议实例声明**（CEP schema 承载） | 绑定是协议属性；死锁论证的图节点必须是 **(network, vc_id)** |
 | 死锁自由性论证 | **CEP 侧**（`ADR-CEP-09`） | `07 §2.2` |
 
-**4 VC × 5 消息类分配（草案）**：`VC0 = request/snoop`、`VC1 = atomic`、`VC2 = query`、`VC3 = response/snoop_resp`。
-NSA 已占 VC1=Atomic、VC2=Remote Query（`25 §3.1/§4.3`），本分配与之相容。
+**🔶 复核修订（2026-10-21，per [复核回执 N-1/N-2/N-3](../roadmap/cep-interface-alignment-review-2026-10-21.md)）**：
+
+原 D8 给出的是**一张扁平 `vc_binding`**（把片上 Compute NoC 与卡间 UALink 压在一起），
+导致 `moesi_gpu` 声明的 `ordering_assumption` 键 `compute_noc` 指向了 UALink 的槽位语义 —— **语义漂移**。
+现改为 **per-network 矩阵**：
+
+| 网络 | VC0 | VC1 | VC2 | VC3 | 出处 |
+|------|-----|-----|-----|-----|------|
+| **`compute_noc`**（片上） | `request` | `response` | `snoop` + `forward_data` | `snoop_resp` + `snoop_completion_ack` | `08 §4.3` 四槽划分**保持不变**，仅补 6 类词表映射 |
+| **`ualink_fabric`**（卡间） | `request`（+ Fault Request 共槽） | `atomic` | `query` | `response` + `snoop_resp` + `forward_data` | `25-nsa` VC0~VC2 原样保留，**VC3 本次补齐** |
+
+**消息类词表 = 6 类**：`request` / `response` / `snoop` / `snoop_resp` / `atomic` / `query`；
+**排除** `CATEGORY_CREDIT`（流控类别）、`forward_data`（流 6）与 `snoop_completion_ack`（流 10）（后两者是已有槽位的承载实例）。
+
+**两条死锁自由性支撑规则**（写进协议语义规约）：
+**VC-R1** 请求向与响应向异槽（VC0 ↔ VC1/VC3）；**VC-R2** `snoop_resp` 不携带数据，数据一律走 `forward_data`
+（否则 `snoop_resp`(VC3) 依赖 `forward_data`(VC2) 而 `forward_data` 又依赖 `snoop_resp` → VC2↔VC3 成环）。
+
+**连带**：CEP 侧 `protocol_instance.schema.json` 的 `vc_binding` / `ordering_assumption` 须加 **network 维度**（选项 A），
+delta 见 [`32 号 §6.4`](../architecture/32-cep-based-coherence-architecture.md#64-提议的-schema-deltaper-复核回执-n-2-裁决--选项-a)。
+
+> **为什么是选项 A（加 network 维度）而非选项 B（解析移出声明落到 fabric config）**：
+> ① 选项 B 下同一协议实例跑在 2 个网络时，扁平 `vc_binding` 无法表达（冲突）；
+> ② 死锁是 **per-fabric** 现象，`ADR-CEP-09` 的通道依赖图节点必须是 **(network, vc_id)**；
+> ③ 选项 B 会让 C-4「声明 ↔ schema 双向映射」不可自校验。
 
 ### D9. 协议实例拆分口径：2 个协议实例 + 1 个 SharerTracker 选型
 
@@ -206,20 +230,22 @@ NSA 已占 VC1=Atomic、VC2=Remote Query（`25 §3.1/§4.3`），本分配与之
 **连带**：收敛 `25-nsa §4.4` + `§7` 开放问题 #4（MESIF vs MOESI vs MESI）
 → **不做单选，做可实例化的 A/B**（这正是 CEP 的存在价值）。
 
-### D10. 向 CppTLM CEP 提出 R-1 ~ R-13 需求单
+### D10. 向 CppTLM CEP 提出 R-1 ~ R-13 需求单（含 R-5' / R-5'' / R-6' 修订）
 
-**决策**：本仓向 CEP 提交 13 项需求（`32 号 §11`），其中 **P0 级 5 项**：
+**决策**：本仓向 CEP 提交 13 项需求（`32 号 §11`），其中 **P0 级 7 项**：
 
 | # | 需求 | 阻塞什么 |
 |---|------|---------|
 | **R-2** | `perm` 加「可静默升级」判别位 | D-CPU↔D-GPU 跨域正确性论证；命中 `ADR-CEP-05 §10` 已写下的触发条件 |
-| **R-6** | 消息类词表 `{request,response,snoop,atomic,query}` + NoC Bundle 类别扩展 | 放行判据 C-4（机器可验收的双向映射） |
+| **R-5'** | fabric config 提供**网络命名空间 + 每网络 `vc_count`** | `vc_binding` 逐网络化的直接前提；C-4 双向映射依赖此项 |
+| **R-5''** | `ordering_assumption` 从 per-network 单值升为 **per-(network, vc_id)** | 与 R-6' 捆绑；否则两个 map 的 key space 不一致 |
+| **R-6'** | 消息类词表定为 **6 类**（含 `snoop_resp`；排除 `CATEGORY_CREDIT` / `forward_data` / `snoop_completion_ack`）+ `vc_binding` / `ordering_assumption` 加 **network 维度**（schema 修订） | N-2 / N-3 的直接落点；不修订则 C-4 不可机器验收 |
 | **R-9** | 显式声明「插件接口不含 `translate(from,to)`」 | CEP Stage 1 插件接口定稿 |
 | **R-11** | 「真实缓存 + CEP 协议」路线在 Stage 1 前定案 | 本仓 Phase 7.C 是否还写 `snoop_callback` |
 | **R-13** | `ADR-CEP-11 §3` 版本锁定表增 2 行（`moesi-gpu-1.0` / `mesif-1.0`） | `INV-CEP-11-IC1`：表外取值 = **装配期 fail** → 本仓 `32 号 §6` 的协议实例声明当前必然 fail,C-4 不可机器验收 |
 
-**P1 级 8 项**：R-1（分级目录第 6 实现）、R-3（`consistency_labels` scope 分级）、R-4（`atomic` 语义标签）、
-R-5（network 命名空间清单）、R-7（目录式远端查询的流组合规范）、R-8（`family` 口径）、
+**P1 级 6 项**：R-1（分级目录第 6 实现）、R-3（`consistency_labels` scope 分级）、R-4（`atomic` 语义标签）、
+R-7（目录式远端查询的流组合规范）、R-8（`family` 口径）、
 R-10（`CoherenceDomain` 弃用后的域概念对齐）、R-12（`perm` 与 Capability 的正交性）。
 
 ### D11. 请求把放行判据 C-1 从「接口 PR」改为「接口规约 PR」
@@ -302,16 +328,25 @@ R-10（`CoherenceDomain` 弃用后的域概念对齐）、R-12（`perm` 与 Capa
 
 ## 5. Verification (验收)
 
-| # | 验收项 | 方法 |
-|---|--------|------|
-| V-1 | 6 问各有书面结论且落点可追溯 | roadmap `cep-interface-alignment.md §5` 答复表填满 |
-| V-2 | P0-1 ~ P0-5 逐项有结论 | roadmap `cep-interface-alignment.md §4` 增列结论列 |
-| V-3 | P0-3 映射表存在且逐类型可追 | `32 号 §7.1` |
-| V-4 | 6→4 投影表存在且标注两处语义损失 | `32 号 §7.2` |
-| V-5 | 协议实例声明可被 CEP schema 校验 | `32 号 §6.1/§6.2` 的 JSON → `protocol_instance.schema.json` 校验通过 |
-| V-6 | 3 域声明含桥接粒度 + 域可见写判据 | `32 号 §5` |
-| V-7 | 9 份文档返工完成且无悬空引用 | 返工 diff + 全仓 `file:line` 检查 |
-| V-8 | R-1 ~ R-12 需求单送达并有 CEP 侧回执 | CEP 侧 reply（本 ADR 升 Accepted 的前置） |
+> **状态快照（2026-10-21，复核轮后）**。本 ADR 的「决策」已拍板 → 状态升 **✅ Accepted**；
+> **文档返工（D-9）是决策的后果而非前置**，故不阻塞 Accepted。验收项状态按事实标注，**未完成项不作已完成计**。
+
+| # | 验收项 | 方法 | 状态（2026-10-21） |
+|---|--------|------|:---:|
+| V-1 | 6 问各有书面结论且落点可追溯 | roadmap `cep-interface-alignment.md §5` 答复表填满 | ✅ 已满足 |
+| V-2 | P0-1 ~ P0-5 逐项有结论 | roadmap `cep-interface-alignment.md §4` 增列结论列 | ✅ 已满足 |
+| V-3 | P0-3 映射表存在且逐类型可追 | `32 号 §7.1` | ✅ 已满足 |
+| V-4 | 6→4 投影表存在且标注两处语义损失 | `32 号 §7.2` | ✅ 已满足 |
+| V-5 | 协议实例声明可被 CEP schema 校验 | `32 号 §6.1/§6.2` 的 JSON → schema 校验 | 🔴 **待 CEP 侧 schema 修订** —— 声明已按**目标形式**（per-network）书写；在 R-6' 的 delta 合入前，按**现行** schema 校验会 fail（**预期**，不做降级写法） |
+| V-6 | 3 域声明含桥接粒度 + 域可见写判据 | `32 号 §5` | ✅ 已满足 |
+| V-7 | 9 份文档返工完成且无悬空引用 | 返工 diff + 全仓 `file:line` 检查 | 🔶 **进行中** —— 返工清单见 §3.1；⚠️ **返工落地会打断 CppTLM `cep_archforge_alignment_check.sh` 的 21 个 ArchForge 锚点**（其中 20 个正指向返工位置）→ **必须与 CppTLM 侧锚点重生成同批** |
+| V-8 | R-1 ~ R-13 需求单送达并有 CEP 侧回执 | CEP 侧 reply | 🔶 **部分满足** —— 送达 ✅（commit `6020f42`）；CEP 侧回执 = [**复核回执 N-1 ~ N-4**](../roadmap/cep-interface-alignment-review-2026-10-21.md)（2026-10-21）；**R-1 ~ R-13 的逐条技术回执仍待** |
+
+> **V-8 的口径说明**：本轮复核回执的是 **N-1 ~ N-4（对 `6020f42` 交付物的复核）**，
+> **不等于** CEP 侧对 R-1 ~ R-13 的逐条技术回执 —— 后者仍待，不作已满足计。
+
+> **V-5 / V-7 / V-8 三项是本 ADR Accepted 后的跟踪项**，不阻塞决策生效；
+> 跟踪载体 = 本节 + [`复核回执`](../roadmap/cep-interface-alignment-review-2026-10-21.md) §5（放行判据影响）。
 
 ---
 
@@ -319,9 +354,10 @@ R-10（`CoherenceDomain` 弃用后的域概念对齐）、R-12（`perm` 与 Capa
 
 | 日期 | 版本 | 修订 |
 |------|------|------|
+| 2026-10-21 | v1.0 | **Accepted** —— 提交复核新发现 N-1（P0，VC 分配双答案）/ N-2（P0，`vc_binding` 缺 network 维度）/ N-3（P1，词表漏 `snoop_resp`）/ N-4（P1，ADR 状态）**全部裁决完毕**并回写：<br>① **D8 改为 per-network 矩阵**（片上 `compute_noc` 与卡间 `ualink_fabric` 是同一矩阵的两行，不是两套互斥答案；`08 §4.3` 四槽划分保持不变，UALink VC3 本次补齐）；<br>② **D10 升为 R-5' / R-5'' / R-6'**（P0 由 5 项增至 7 项），并向 CEP 侧提交 **schema delta**（`32 号 §6.4`）；<br>③ 消息类词表定为 **6 类**（排除 `CATEGORY_CREDIT` / `forward_data` / `snoop_completion_ack`）；<br>④ §5 验收项状态显式化（V-5/V-7/V-8 标注真实状态，**未完成项不作已完成计**）。<br>裁决全文见 [`复核回执 N-1 ~ N-4`](../roadmap/cep-interface-alignment-review-2026-10-21.md) |
 | 2026-10-21 | v0.1 | 首版：对齐 CppTLM CEP 提问单（6 问）+ 体系 A/B 收敛诊断 + 11 项决策 + 9 份文档返工清单 + R-1~R-12 需求单 + 8 项验收 |
 
 ---
 
 **关联 OpenSpec change**: 待创建（`openspec/changes/2026-10-21-archforge-cep-alignment/`）
-**下次更新**: 待 CEP 侧对 R-1 ~ R-12 逐条答复后升 v1.0（Accepted / Rejected 逐条）
+**下次更新**: 待 CEP 侧对 R-1 ~ R-13 逐条回执后追加「CEP 侧回执」列（不改变本 ADR 的 Accepted 状态）

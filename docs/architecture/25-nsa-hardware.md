@@ -556,6 +556,24 @@ Owner 唯一性保证:
 
 ### §4.3 Hardware Directory 查询协议
 
+> **🔶 复核修订（2026-10-21，per [`ADR-SOC-25`](../adr/ADR-SOC-25-cep-aligned-coherence-architecture.md) D8 +
+> [复核回执 N-1](../roadmap/cep-interface-alignment-review-2026-10-21.md)）**：
+> 本节的 UALink VC 占用（VC0=Fault Request / VC1=Atomic / VC2=Remote Query）**原样保留**，
+> **补齐 VC3 = Response**；本节是
+> [`32-cep-based-coherence-architecture.md §6.0.2`](../architecture/32-cep-based-coherence-architecture.md#602-per-network-vc-分配矩阵权威)
+> 权威 per-network 矩阵的 **`ualink_fabric` 行**。
+> **VC 分配是 per-network 的** —— 本节（卡间 `ualink_fabric`）与 `08-noc-interconnect.md §4.3`（片上 `compute_noc`）
+> **是同一张矩阵的两行，不是两套互斥答案**。
+
+**`ualink_fabric` 行的 VC 分配**（per-network，权威见 §6.0.2）：
+
+| 槽 | 承载 | CEP 消息类 | 出处 |
+|----|------|-----------|------|
+| VC0 | Fault Request（非一致性）+ 一致性请求 | `request` | Fault Request: 本节 §3 故障路径（`:336`）；`request`: 跨卡一致请求 |
+| VC1 | Remote Atomic | `atomic` | 本节 §3.1 Path 2（`:392`） |
+| VC2 | Remote Query | `query` | 本节 §4.3 步骤 5-6（`:567`） |
+| VC3 | 响应 / 数据返回 | `response` + `snoop_resp` + `forward_data` | **本次补齐**（死锁自由性：请求向 VC0 ↔ 响应向 VC3 异槽） |
+
 ```
 NSA-aware Hardware Directory Lookup (远程查询):
 

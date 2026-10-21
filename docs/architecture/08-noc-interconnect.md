@@ -204,12 +204,47 @@ W ── router ── E
 
 ### 4.3 Virtual Channel(VC)
 
-**VC 分配**(避免协议死锁):
+**VC 分配**(避免协议死锁)—— **本节作用域 = `compute_noc`（片上 Mesh）**:
+
 - VC0:Request 流量
 - VC1:Response 流量
 - VC2:Forward 流量
 - VC3:Reply 流量
 - 4 VC 足以避免请求-响应协议死锁
+
+> **🔶 复核修订（2026-10-21，per [`ADR-SOC-25`](../adr/ADR-SOC-25-cep-aligned-coherence-architecture.md) D8 +
+> [复核回执 N-1](../roadmap/cep-interface-alignment-review-2026-10-21.md)）**：
+>
+> **① 本节的四槽划分保持不变**，仅补 **CEP 规范消息类（6 类）** 的映射 —— 使本表成为
+> [`32-cep-based-coherence-architecture.md §6.0.2`](../architecture/32-cep-based-coherence-architecture.md#602-per-network-vc-分配矩阵权威)
+> 权威 per-network 矩阵的 `compute_noc` 行。
+>
+> **② VC 分配是 per-network 的**：本节（片上 `compute_noc`）与 `25-nsa-hardware.md §3.1/§4.3`（卡间 `ualink_fabric`，
+> VC0=Fault Request / VC1=Atomic / VC2=Remote Query / VC3=Response）**是同一张矩阵的两行，不是两套互斥答案**。
+>
+> **③ 消息类词表 = 6 类**：`request` / `response` / `snoop` / `snoop_resp` / `atomic` / `query`。
+> `CATEGORY_CREDIT` 是**流控类别**，不在词表内；`forward_data`（流 6）与 `snoop_completion_ack`（流 10）
+> **不单列**（分别是 Forward 槽与 Reply 槽的承载实例）。
+>
+> **④ 两条死锁自由性支撑规则**（缺一即成环，写入协议语义规约）：
+> - **VC-R1** 请求向与响应向必须异槽（VC0 ↔ VC1/VC3）；
+> - **VC-R2** `snoop_resp` **不携带数据**，数据一律走 `forward_data` ——
+>   否则 `snoop_resp`(VC3) 依赖 `forward_data`(VC2) 而 `forward_data` 又依赖 `snoop_resp` → **VC2↔VC3 成环**。
+>   本节原有的 **Forward / Reply 双槽设计正是为此**（Reply = 纯状态应答，Forward = 数据通道）。
+>
+> **⑤ 权威方**：本仓是 `vc_id` 命名空间与网络排序属性的权威方；CEP schema **引用而不定义**。
+
+**`compute_noc` 行的 6 类消息类映射**：
+
+| 槽 | 08 号原始命名 | CEP 消息类 | 备注 |
+|----|------------|-----------|------|
+| VC0 | Request | `request` | 流 1 |
+| VC1 | Response | `response` | 流 2 |
+| VC2 | Forward | `snoop` + `forward_data` | 流 3 / 流 6 |
+| VC3 | Reply | `snoop_resp` + `snoop_completion_ack` | 流 4 / 流 10 |
+
+> `atomic` / `query` **不在 `compute_noc` 上**（SoC 内无中心目录、无原子语义）——
+> 二者属卡间 `ualink_fabric` 行。**「某消息类在某网络上缺席」是合法状态**，不要求每个网络承载全部 6 类。
 
 ### 4.4 仲裁调度
 

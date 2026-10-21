@@ -29,7 +29,7 @@
 | **协议实例声明**（可直接喂给 CEP schema） | [§6](#6-协议实例声明) |
 | **P0-3 映射表**（ArchForge 类型 → canonical 10 流） | [§7](#7-p0-3-映射表archforge-类型--canonical-10-流) |
 | **6 问的正式答复** | [§10](#10-6-问答复正式) |
-| **对 CEP 框架的需求**（R-1 ~ R-13） | [§11](#11-对-cep-框架的需求r-1--r-13) |
+| **对 CEP 框架的需求**（R-1 ~ R-13） | [§11](#11-对-cep-框架的需求r-1--r-13含-r-5--r-5--r-6-修订) |
 
 ---
 
@@ -60,7 +60,8 @@ SoC 内的 MOESI/GPU 6×6 与 NSA 侧的 Hardware Directory **不是两套东西
 | **Q1** 6 态 `CoherenceState` 归属层 | **A**（下沉到协议插件） | 6 态是 MOESI/AMD 家族的**协议内编码**；`O`/`T` 无 4 值 `perm` 投影；CEP `INV-CEP-05-IC1` 分层正确 |
 | **Q2** `CoherenceProtocol` 抽象基类归属仓 | **B**（下沉为 CppTLM 侧 ProtocolEngine 插件接口）**+ 3 项强制修订** | 「协议逻辑住 Plugin、能力以数据声明」是 CEP 的立论基础；但 `translate()` 必须移出、请求语义须带 consistency label、基类须更名 |
 | **Q3** `snoop_callback` 耦合路径 | **A**（改走 adapter）—— **且无可改之物** | 直连从未实现；`CacheTLM` 当前天然满足 `INV-CEP-15-IC3`；正确动作是**不建成这样** |
-| **Q4** VC / ordering 权威方 | **B**（ArchForge 侧承载）**+ 拆分** | `vc_id` 0-3 命名空间已存在且与 CEP 同域；但**协议→VC 绑定表**归协议实例声明 | 
+| **Q4** VC / ordering 权威方 | **B**（ArchForge 侧承载）**+ 拆分** | `vc_id` 0-3 命名空间已存在且与 CEP 同域；但**协议→VC 绑定表**归协议实例声明 |
+| **Q4**（复核修订） | **B** + **per-network 矩阵** | VC 分配是 **per-network** 的（片上 Compute NoC vs 卡间 UALink 是**两张表**）；`vc_binding` / `ordering_assumption` 加 **network 维度** → **R-5' / R-5'' / R-6'**（[复核回执 N-1/N-2](../roadmap/cep-interface-alignment-review-2026-10-21.md)） |
 | **Q5** 协议族边界权威方 | **A**（边界由 CppTLM 侧定义）**+ ArchForge 给出实例拆分口径** | ArchForge 贡献 2 个协议实例（`moesi_gpu` / `mesif`）+ 1 个 SharerTracker 选型，而非 1 个 |
 | **Q6** 跨域权限词表 | **A**（接受 4 值）**+ 投影表 + 1 项 schema 请求** | 6→4 投影无歧义；唯一缺口是「静默升级」不可表达 → R-2 |
 
@@ -237,7 +238,7 @@ CEP 的 6 层模型（`07 号 §2.1-2.2`）恰好把两套体系放进**同一�
 | ArchForge 现有构件 | 位置 | CEP 目标层 | 协议无关? | 处置 |
 |--------------------|------|------------|:----------:|------|
 | NSA Fabric Address / HRT / RCT / Capability | 22 / 21-tee-udd / 27 | **Fabric & Transport** | ✅ | 保留；Capability 须与 `perm` **正交**（R-12） |
-| Compute NoC / UALink / PCIe-over-UALink / NSA Switch / CXL Fabric | 08 / 21-fabric-switch / 28 | **Fabric & Transport** | ✅ | 保留；补 network 命名空间清单（R-5） |
+| Compute NoC / UALink / PCIe-over-UALink / NSA Switch / CXL Fabric | 08 / 21-fabric-switch / 28 | **Fabric & Transport** | ✅ | 保留；补 network 命名空间 + 每网络 `vc_count`（R-5'） |
 | Hardware Directory L1/L2/L3 | 25 §4 | **Directory & Ordering**（SharerTracker） | ✅ | **需第 6 种 SharerTracker 实现**（R-1） |
 | `SnoopFilter`（`snoop_filter.md`） | microarch | **Directory & Ordering**（`SparseSnoopFilter`） | ✅ | 归并 09 §7.2 的 `SnoopEntry`（F3） |
 | `CoherenceBridge`（8 端口） | microarch | **Coherence Interface** + 跨域判据 | ✅ | 降级：不再是「懂两个协议」的转换器（R-9） |
@@ -289,6 +290,68 @@ CEP 的 6 层模型（`07 号 §2.1-2.2`）恰好把两套体系放进**同一�
 > ⚠️ `protocol_version` 的取值受 `INV-CEP-11-IC1` 约束：**必须**落在 `ADR-CEP-11 §3` 锁定表内，否则装配期 fail ——
 > `moesi-gpu-1.0` / `mesif-1.0` **当前不在该表内**，需 CEP 侧增补（**R-13**）。
 
+### 6.0 VC 分配权威矩阵（per-network）+ 消息类词表
+
+> **本节是 VC 分配的唯一权威**（per 复核回执 [N-1 裁决](../roadmap/cep-interface-alignment-review-2026-10-21.md)）。
+> `08-noc-interconnect.md §4.3`（片上 Compute NoC）与 `25-nsa-hardware.md §3.1/§4.3`（卡间 UALink）
+> **分属不同 fabric**，是本矩阵的**两行**，不是两套互斥答案。
+
+#### 6.0.1 消息类词表（CEP 规范消息类，**6 类**）
+
+| # | 消息类 | canonical 流 | 方向 | 语义 |
+|---|--------|------------|------|------|
+| 1 | `request` | 流 1 | node → center | 缓存行请求（读 / 唯一化 / 写回 / 驱逐） |
+| 2 | `response` | 流 2 | center → node | 请求完成 + data + perm + error |
+| 3 | `snoop` | 流 3 | center → node | snoop 查询 / 失效 / clean / forward |
+| 4 | `snoop_resp` | 流 4 | node → center | snoop 响应：hit + state + dirty + data + txn_id |
+| 5 | `atomic` | 流 1 的**独立属性** | node → center | 原子意图（CEN-Ib11） |
+| 6 | `query` | 流 8 | node ↔ center | 地址归属 / sharer 查询 |
+
+**明确排除**（不进 `vc_binding` 词表）：
+
+| 被排除项 | 排除理由 |
+|---------|---------|
+| **`CATEGORY_CREDIT`** | **流控类别**，非一致性消息类（`noc_bundles_tlm.hh:62` 注释即「Credit 信号专用类别」）；credit 随所在 VC 的流一起走，**不单独占槽** |
+| **`forward_data`（流 6）** | **不单列** —— 它是 `snoop` 槽（Forward 槽）的**承载实例**；对 stub 不可显式为接口（CEN-Ib6 不可分辨性） |
+| **`snoop_completion_ack`（流 10）** | **不单列** —— 它是 `snoop_resp` 槽（Reply 槽）的**承载实例**（CEN-Ib10：配对 `snoop_resp` 不配对 `completion`） |
+
+> **为什么 `snoop_resp` 是一等消息类**：`CEN-Ib3`（snoop 必有 snoop_resp）+ `CEN-Ib4`（须含 `txn_id`）+ `CEN-Ib10`（ack 配对它）
+> 三条 invariant 都以它为对象；且它承担**协议插件内瞬态态收敛**职责（`INV-CEP-05-IC1` 的 `T` 态由它终结）。
+> 漏列它 → 协议侧无法声明「snoop 应答走哪个 VC」。
+
+#### 6.0.2 per-network VC 分配矩阵（权威）
+
+| 网络 | VC0 | VC1 | VC2 | VC3 | 出处 |
+|------|-----|-----|-----|-----|------|
+| **`compute_noc`**（片上 Mesh） | `request` | `response` | `snoop` + `forward_data` | `snoop_resp` + `snoop_completion_ack` | `08-noc-interconnect.md §4.3` 的 Request/Response/Forward/Reply **四槽划分保持不变**，仅补 6 类词表映射 |
+| **`ualink_fabric`**（卡间 UALink） | `request`（+ 非一致性的 Fault Request 共槽，`25-nsa:336`） | `atomic`（`25-nsa:392`） | `query`（`25-nsa:567`） | `response` + `snoop_resp` + `forward_data` | VC0~VC2 原样保留，**VC3 本次补齐** |
+
+**槽位语义的两层归属**（避免混淆）：
+
+| 层 | 内容 | 归属 |
+|----|------|------|
+| **fabric config**（拓扑配置层） | 每个网络每个 VC 槽**承载什么**（可含非一致性流量，如 UALink VC0 的 Fault Request） | 网络侧 |
+| **`vc_binding`**（协议实例声明） | 本协议实例的**一致性消息类** → `vc_id` 绑定（逐网络） | 协议侧 |
+
+#### 6.0.3 死锁自由性论证（per `ADR-CEP-09` 装配期判据）
+
+| 网络 | 通道依赖边 | 环 |
+|------|-----------|:--:|
+| `compute_noc` | VC0→VC1, VC0→VC2, VC0→VC3, VC1→VC3, VC3→VC2 | **无环** ✅ |
+| `ualink_fabric` | VC0→VC3, VC1→VC3, VC2→VC3 | **无环** ✅ |
+
+**两条支撑规则（缺一即成环，必须写进协议语义规约）**：
+
+| # | 规则 | 破了会怎样 |
+|---|------|-----------|
+| **VC-R1** | **请求向与响应向必须异槽**（VC0 ↔ VC1/VC3） | 请求-响应互等 → 经典请求-响应死锁 |
+| **VC-R2** | **`snoop_resp` 不携带数据；数据一律走 `forward_data`** | `snoop_resp`(VC3) 依赖 `forward_data`(VC2) 而 `forward_data` 又依赖 `snoop_resp` → **VC2↔VC3 成环** |
+
+> **VC-R2 正是 `08 §4.3` 原有 Forward / Reply 双槽设计的用意**（Reply = 纯状态应答，Forward = 数据通道）——
+> 本次只是把它**显式化为协议规约**，而非新增设计。
+
+> ⚠️ 上述论证由 ArchForge 侧给出**分配表 + 依赖边**；最终判定归 CEP `ADR-CEP-09` 的机器校验（ArchForge 侧不背书）。
+
 ### 6.1 实例 1：`moesi_gpu`
 
 ```json
@@ -312,13 +375,28 @@ CEP 的 6 层模型（`07 号 §2.1-2.2`）恰好把两套体系放进**同一�
     "write": "RC-release"
   },
   "ordering_assumption": {
-    "compute_noc": "unordered",
-    "ualink_fabric": "unordered"
+    "compute_noc": {
+      "0": "unordered",
+      "1": "p2p_ordered",
+      "2": "unordered",
+      "3": "p2p_ordered"
+    },
+    "ualink_fabric": {
+      "0": "unordered",
+      "1": "unordered",
+      "2": "unordered",
+      "3": "p2p_ordered"
+    }
   },
   "vc_binding": {
-    "request": 0, "snoop": 0,
-    "response": 3, "snoop_resp": 3,
-    "atomic": 1, "query": 2
+    "compute_noc": {
+      "request": 0, "response": 1,
+      "snoop": 2, "snoop_resp": 3
+    },
+    "ualink_fabric": {
+      "request": 0, "atomic": 1, "query": 2,
+      "response": 3, "snoop_resp": 3
+    }
   },
   "sharer_tracker": {
     "impl": "SparseSnoopFilter",
@@ -343,13 +421,15 @@ CEP 的 6 层模型（`07 号 §2.1-2.2`）恰好把两套体系放进**同一�
 | `perm` 4 值 | 与 `CEN-Ib11` 的 4 值锁一致；投影表见 [§7.2](#72-6-态--4-值-projection-表答复-q6-a) |
 | `atomic.supported = false` | `moesi_gpu` 6 事件中无原子语义；原子由 Remote Atomic 路径承担（见 §6.2 的 `mesif` / NSA 侧） |
 | `consistency_labels` = RC | `30-nsa §2.1` 选型推荐（GPU 侧）+ `30-nsa §2.3` Rule 2 |
-| `vc_binding` | NSA 已占 VC1=Atomic / VC2=Remote Query（`25 §3.1/§4.3`）；VC0/VС3 分给请求/响应（死锁自由性论证见下） |
+| `vc_binding` | **逐网络**矩阵，见 [§6.0.2](#602-per-network-vc-分配矩阵权威)；`compute_noc` 行取自 `08 §4.3` 的四槽划分（Request/Response/Forward/Reply），`ualink_fabric` 行取自 `25-nsa` 已占的 VC0/VC1/VC2 + 本次补齐的 VC3 |
+| `ordering_assumption` | **逐网络 × 逐 VC**（per `ADR-CEP-12` 决策 5「排序是 **VC 的静态属性**」）；响应类槽（VC1/VC3）取 `p2p_ordered`，请求向槽取 `unordered` |
 | `sharer_tracker.impl = SparseSnoopFilter` | SoC 内为 snoop 型（`SnoopFilter`，`snoop_filter.md`），保守过滤（宁多探不漏探），与 `07 §5.2` 的 `SparseSnoopFilter` 语义对齐 |
 
-> **VC 死锁自由性**：VC0/VС3 分离请求/响应 + VC1/VC2 的响应统一走 VC3 → 无通道依赖环。
+> **VC 死锁自由性**：见 [§6.0.3](#603-死锁自由性论证per-adr-cep-09-装配期判据)（两张网络均无环 + 两条支撑规则 VC-R1 / VC-R2）。
 > **但该论证须由 CEP `ADR-CEP-09` 的装配期判据机器校验**（ArchForge 侧只提供分配表，不背书）。
 > **另一处待修**：`noc_bundles_tlm.hh:60-62` 目前只有 `CATEGORY_REQUEST/RESPONSE/CREDIT` 三类，
-> 而本分配需要 **5 个消息类**（request / response / snoop / atomic / query）→ 见 **R-6**。
+> 而一致性消息类需 **6 类**（`request` / `response` / `snoop` / `snoop_resp` / `atomic` / `query`，见 [§6.0.1](#601-消息类词表cep-规范消息类6-类)）→ 见 **R-6'**。
+> **`CATEGORY_CREDIT` 明确排除**在消息类词表之外（流控类别，非一致性语义）。
 
 ### 6.2 备选实例：`mesif`（收敛 NSA 开放问题 #4）
 
@@ -369,9 +449,30 @@ CEP 的 6 层模型（`07 号 §2.1-2.2`）恰好把两套体系放进**同一�
   "perm": ["NONE", "READ", "UNIQUE", "WRITEBACK"],
   "atomic": { "supported": true, "intent_field": "consistency_intent" },
   "consistency_labels": { "read": "RC-acquire", "write": "RC-release" },
-  "ordering_assumption": { "ualink_fabric": "unordered", "nsa_switch": "p2p_ordered" },
-  "vc_binding": { "request": 0, "snoop": 0, "response": 3, "snoop_resp": 3,
-                  "atomic": 1, "query": 2 },
+  "ordering_assumption": {
+    "compute_noc": {
+      "0": "unordered",
+      "1": "p2p_ordered",
+      "2": "unordered",
+      "3": "p2p_ordered"
+    },
+    "ualink_fabric": {
+      "0": "unordered",
+      "1": "unordered",
+      "2": "unordered",
+      "3": "p2p_ordered"
+    }
+  },
+  "vc_binding": {
+    "compute_noc": {
+      "request": 0, "response": 1,
+      "snoop": 2, "snoop_resp": 3
+    },
+    "ualink_fabric": {
+      "request": 0, "atomic": 1, "query": 2,
+      "response": 3, "snoop_resp": 3
+    }
+  },
   "sharer_tracker": {
     "impl": "SparseSnoopFilter",
     "caps": { "scope": "SYSTEM", "completeness": "CONSERVATIVE",
@@ -386,6 +487,12 @@ CEP 的 6 层模型（`07 号 §2.1-2.2`）恰好把两套体系放进**同一�
 2. `atomic.supported = true` + `intent_field = "consistency_intent"` → 承载 NSA Remote Atomic 的 `[24] Acquire/Release` 位（**R-4**）；
 3. `consistency_labels` 用 `RC-acquire` / `RC-release`（显式 acquire 读），而 `moesi_gpu` 用 `RC-data`（数据值响应）；
 4. 目录形态不同（Owner Bitmap + Sharer List vs 保守 snoop filter）→ 见 [§9.1](#91-hardware-directory--sharertracker)。
+
+> **为何 `mesif` 不声明 `nsa_switch` 网络**：NSA Switch Coherency Engine 是 **D-FABRIC 域的 Ordering Point**
+> （见 [§9.4](#94-nsa-switch-双角色--ordering-point)），但 **NSA Switch 本身当前不是「承载一致性消息的 fabric」** ——
+> 本仓未给出它的 VC 分配（`25-nsa` / `28-cxl-3-fabric` 均无 VC 占用记录）。
+> 按 §6.0.2 的纪律「**每个网络必须同时出现在 `ordering_assumption` 与 `vc_binding` 中**」，
+> 未有 VC 分配的网络**不进矩阵**。待 NSA Switch 成为承载网络时，须先补其 VC 行，再进矩阵。
 
 ### 6.3 族边界声明（答复 Q5）
 
@@ -694,16 +801,25 @@ CEP 的 `INV-CEP-05-IC1`（协议瞬态态与协议私有态住插件内）是�
 
 **结论：B —— ArchForge 侧承载 `vc_id` 命名空间与网络排序属性；协议→VC 绑定表归协议实例声明。**（原问题把两件事混为一谈，拆分如下）
 
+> 🔶 **复核修订（2026-10-21，per [复核回执 N-1/N-2](../roadmap/cep-interface-alignment-review-2026-10-21.md)）**：
+> ① 本问前提「ArchForge 侧当前没有 VC/ordering 概念」**不成立** —— `include/bundles/noc_bundles_tlm.hh:38` 已有 `vc_id` 0-3，与 CEP schema 同域；
+> ② **VC 分配是 per-network 的**（片上 Compute NoC vs 卡间 UALink 是**两张表**，不是两套互斥答案）；
+> ③ **`vc_binding` 必须带 network 维度**（选项 A），且 `ordering_assumption` 须同步升为 per-(network, vc_id)；
+> ④ 消息类词表定为 **6 类**（`request` / `response` / `snoop` / `snoop_resp` / `atomic` / `query`），`CATEGORY_CREDIT` 排除。
+
 | 子项 | 权威方 | 依据 |
 |------|--------|------|
 | `vc_id` **命名空间**（0-3） | **ArchForge / CppTLM NoC Bundle 层**（已存在） | `noc_bundles_tlm.hh:38`（`ch_uint<8> vc_id`，0-3）+ `08-noc-interconnect.md:205-212`；**与 CEP schema 的 0..3 完全同域** |
-| 各网络的**排序属性**（`p2p_ordered` / `unordered`） | **ArchForge 侧声明**（逐网络） | `08 §4.1` XY 路由死锁避免；NSA Switch PBR 的点对点有序性 |
-| **消息类 → `vc_id`** 绑定表 | **协议实例声明**（CEP 侧 schema 承载） | 绑定是协议属性，非架构属性；`ADR-CEP-12` schema 的 `vc_binding` 字段本为此设 |
+| **网络清单 + 每网络 `vc_count`** | **ArchForge 侧**（fabric config 输入） | `22-nsa §0.5` Glossary 扩 network 维度（**R-5'**） |
+| 各网络各 VC 的**排序属性** | **ArchForge 侧声明**（逐网络 × 逐 VC） | `08 §4.1` XY 路由死锁避免；`ADR-CEP-12` 决策 5「排序是 **VC 的静态属性**」 |
+| **消息类 → `vc_id`**（逐网络） | **协议实例声明**（CEP 侧 schema 承载） | 绑定是协议属性；且死锁论证的图节点必须是 **(network, vc_id)** |
 | 死锁自由性**论证** | **CEP 侧**（`ADR-CEP-09` 装配期判据） | `07 §2.2`「VC 分配（首要用途 = 死锁自由性论证载体）」 |
 
 **落点与改动范围**：
-- `docs/architecture/08-noc-interconnect.md:205-212` → 补一句「本仓是 `vc_id` 命名空间的权威方；CEP schema 引用而不定义」；
-- `docs/architecture/22-nsa-fabric-address-spec.md §0.5`（Normative Glossary）→ **扩一维：network 命名空间**（R-5）。
+- `docs/architecture/08-noc-interconnect.md:205-212` → 标注 `network = compute_noc` + 补 6 类词表映射 + 指向 §6.0.2 权威矩阵；
+- `docs/architecture/25-nsa-hardware.md §3.1/§4.3` → 标注 `network = ualink_fabric` + 补 VC3 = `response` + 指向权威矩阵；
+- `docs/architecture/22-nsa-fabric-address-spec.md §0.5`（Normative Glossary）→ **扩一维：network 命名空间**（R-5'）；
+- `docs/architecture/32-cep-based-coherence-architecture.md §6.0` → **新增 per-network 权威矩阵**（§6.4 → schema delta）。
 
 ### Q5. 协议族边界的权威方
 
@@ -717,6 +833,67 @@ CEP 的 `INV-CEP-05-IC1`（协议瞬态态与协议私有态住插件内）是�
 | `mesif` | **1 个协议实例**（与 `moesi_gpu` 并列，构成 A/B 对比） |
 | NSA 三级 Hardware Directory | **不是协议实例**，是 SharerTracker 选型 → 不计 adapter |
 | `moesi_gpu` vs Ruby `MOESI_AMD_Base` / `GPU_VIPER` | **同语义、不同实现** → 依 `07 §5.1.4`「不重复计数」，两边各计各的，**不合并** |
+
+### 6.4 提议的 schema delta（per 复核回执 N-2 裁决 · 选项 A）
+
+> **本节是给 CEP 侧的直接可执行 patch**。在 CEP 侧合入前，§6.1 / §6.2 的声明按**现行 schema 校验会 fail（预期）** ——
+> 本仓**不做**「迁就现行 schema 的降级写法」，因为那会把 N-2 的语义漂移重新引入。
+
+#### 6.4.1 delta
+
+```diff
+  "ordering_assumption": {
+-   "description": "逐网络的排序假设(per ADR-CEP-12 决策 5):key 必须能解析到唯一 vc_id;排序是 VC 的静态属性,flit 不带 ordering 字段",
+-   "type": "object",
+-   "minProperties": 1,
+-   "additionalProperties": { "enum": ["p2p_ordered", "unordered"] }
++   "description": "逐网络 × 逐 VC 的排序假设(per ADR-CEP-12 决策 5 + 复核 N-2 裁决):key = network,值 = { vc_id: ordering };排序是 VC 的静态属性,flit 不带 ordering 字段",
++   "type": "object",
++   "minProperties": 1,
++   "additionalProperties": {
++     "type": "object",
++     "minProperties": 1,
++     "additionalProperties": { "enum": ["p2p_ordered", "unordered"] }
++   }
+  },
+  "vc_binding": {
+-   "description": "消息类 → vc_id 的映射(per ProtoGen 局限 L4:VC 绑定不由协议生成器负责);不自动生成",
+-   "type": "object",
+-   "minProperties": 1,
+-   "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 3 }
++   "description": "逐网络的消息类 → vc_id 映射(per 复核 N-2 裁决选项 A:VC 分配是 per-network 的,死锁自由论证的图节点必须是 (network, vc_id));消息类词表 = 6 类 {request,response,snoop,snoop_resp,atomic,query};不自动生成",
++   "type": "object",
++   "minProperties": 1,
++   "additionalProperties": {
++     "type": "object",
++     "minProperties": 1,
++     "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 3 }
++   }
+  }
+```
+
+#### 6.4.2 `INV-CEP-12-IC2` 的可实现化（提议修订）
+
+```
+对每个 network n ∈ ordering_assumption ∪ vc_binding:
+  ① ordering_assumption[n] 的每个 vc_id v ∈ vc_binding[n].values()
+  ② vc_binding[n].values() 中每个 vc_id v < fabric_config.networks[n].vc_count
+  ③ vc_binding[n] 的每个消息类 m ∈ {request,response,snoop,snoop_resp,atomic,query}
+否则 → 装配期 fail（沿用 ADR-CEP-12 决策 3 的「不静默降级」处置）
+```
+
+> **① 消除了现行扁平形式的歧义**：现行 `ordering_assumption` 的 key 既可是 `vc_id` 又可是 `named_network`（`ADR-CEP-12` 决策 5），
+> 扁平形态下 `"0"` 指哪个网络的 VC0 **无法判定**；嵌套形态下该歧义消失。
+>
+> **② 需要 fabric config 提供**：`networks: { <name>: { vc_count: <int> } }` —— 即 R-5' 的交付物。
+
+#### 6.4.3 三面分工（终态）
+
+| 面 | 归属 | 内容 | 本仓交付物 |
+|----|------|------|-----------|
+| 网络命名空间 + 每网络 `vc_count` | **fabric config** | 网络清单 + 槽位数 | **R-5'** |
+| 消息类 → `vc_id`（逐网络） | **协议实例声明** `vc_binding` | §6.0.2 矩阵 | ✅ 已交付 |
+| 排序假设（逐网络 × 逐 VC） | **协议实例声明** `ordering_assumption` | §6.1 / §6.2 | ✅ 已交付 |
 
 **落点与改动范围**：
 - `docs/architecture/09-coherence-protocol.md:444`（`"protocol": "moesi_gpu"`）→ 保留，但补注「协议实例 id，per CEP `protocol_instance.schema.json`」；
@@ -744,7 +921,7 @@ CEP 的 `INV-CEP-05-IC1`（协议瞬态态与协议私有态住插件内）是�
 
 ---
 
-## 11. 对 CEP 框架的需求（R-1 ~ R-13）
+## 11. 对 CEP 框架的需求（R-1 ~ R-13，含 R-5' / R-5'' / R-6' 修订）
 
 > 下列需求由 ArchForge 侧的 NSA 硬件目录 / 跨节点一致性模型 / NoC VC 体系提出，
 > 均带本仓实证锚点。**优先级 P0 = 阻塞 CEP Stage 1 / 或阻塞 ArchForge 自身后续设计**。
@@ -789,25 +966,48 @@ CEP 的 `INV-CEP-05-IC1`（协议瞬态态与协议私有态住插件内）是�
 | **建议落点** | `protocol_instance.schema.json` 的 `atomic`；`ADR-CEP-02` 的 `CEN-Ib11` 补充「intent 取值域」 |
 | **优先级** | **P1** |
 
-### R-5. `ordering_assumption` 的「网络」标识需与本仓拓扑对齐
+### R-5'. fabric config 需提供**网络命名空间 + 每网络 `vc_count`**（R-5 升级）
+
+> 🔶 **复核修订（per [N-2 裁决](../roadmap/cep-interface-alignment-review-2026-10-21.md)）**：R-5 的交付物从「网络名单」升级为
+> 「**网络命名空间 + 每网络 VC 槽位数**」，因为 `vc_binding` / `ordering_assumption` 改为逐网络后，**槽位上界**必须由 fabric config 给出。
 
 | 项 | 内容 |
 |----|------|
-| **需求** | CEP 侧需有一份**网络命名空间的权威清单**（或明确由 ArchForge 侧提供），`ordering_assumption` 的 key 必须解析到该清单 |
-| **实证** | 本仓有 5 类网络：Compute NoC / UALink Fabric / PCIe-over-UALink / NSA Switch PBR / CXL Fabric（`08` / `21-fabric-switch` / `23` / `28`）；`22-nsa §0.5` 的 Normative Glossary（15 术语）**尚无 network 维度** |
-| **现状** | `protocol_instance.schema.json:119-124` 的 `ordering_assumption` 是「逐网络」但无权威 key 清单；`INV-CEP-12-IC2` 要求「named_network key 必须解析到唯一 `vc_id`」 |
-| **建议落点** | **ArchForge 侧**扩 `22-nsa §0.5` 为「15 术语 + network 命名空间」清单；CEP schema 侧引用 |
-| **优先级** | **P1**（C-4 判据「schema 与 ArchForge 声明能双向映射」依赖此项） |
+| **需求** | fabric config 提供 `networks: { <network_name>: { vc_count: <int> } }`；`vc_count` 是该网络 VC 槽位总数（本仓两个网络均为 4） |
+| **实证** | `docs/architecture/08-noc-interconnect.md:45`（片上 NoC）+ `25-nsa-hardware.md:336/392/567`（UALink 已占 VC0/VC1/VC2）+ `22-nsa-fabric-address-spec.md §0.5`（Glossary 15 术语，**尚无 network 维度**） |
+| **现状** | `protocol_instance.schema.json:119-130` 的两个字段均为扁平 map；`INV-CEP-12-IC2` 的「named_network → 唯一 vc_id」解析面**在声明内不存在**（flat 形态下 `"0"` 指哪个网络无法判定） |
+| **建议落点** | **ArchForge 侧**扩 `22-nsa §0.5` 为「15 术语 + **network 命名空间**」清单（含每网络 `vc_count` 与槽位语义）；CEP 侧 fabric config 消费 |
+| **优先级** | **P0**（`vc_binding` 逐网络化的直接前提；C-4 双向映射依赖此项） |
 
-### R-6. `vc_binding` 的消息类词表 + NoC Bundle 类别扩展
+### R-5''. `ordering_assumption` 需从 per-network 单值升为 per-(network, vc_id)
+
+> 🔶 **复核修订（per [N-2 裁决](../roadmap/cep-interface-alignment-review-2026-10-21.md)）**：
+> `ADR-CEP-12` 决策 5 的**理由**是「排序是 **VC 的静态属性**」，其**依据**（`.pcc` 的 `Network { Ordered fwd; Unordered resp; Unordered req; }`）
+> 说明**不同网络、不同 VC 可以有不同序**。现行 per-network 单值**无法表达「同一网络内 VC0 有序、VC1 无序」**。
 
 | 项 | 内容 |
 |----|------|
-| **需求** | ① 消息类词表口径 = `{request, response, snoop, atomic, query}`；② CppTLM 侧 `noc_bundles_tlm.hh` 的 `CATEGORY_*` 需从 3 类扩到覆盖上述 5 类 |
-| **实证** | `include/bundles/noc_bundles_tlm.hh:60-62`（现仅 `CATEGORY_REQUEST=0 / CATEGORY_RESPONSE=1 / CATEGORY_CREDIT=2`）；`08-noc-interconnect.md:205-212`；`25-nsa §3.1/§4.3`（VC1=Atomic / VC2=Remote Query） |
-| **现状** | CEP `vc_binding` 值域 0..3 ✅ 与 `vc_id` 同域；消息类 key **无口径**；NoC 类别 **覆盖不全** |
-| **建议落点** | ArchForge 侧给出 4 VC × 5 消息类的分配表（[§6.1](#61-实例-1moesi_gpu) 已给草案）；**CppTLM 侧**扩 `noc_bundles_tlm.hh` 的类别枚举（属 Fabric 层，非 CEP schema） |
-| **优先级** | **P0**（C-4 是机器可验收判据，消息类口径不定则无法自动比对） |
+| **需求** | `ordering_assumption` 改为 `{ <network>: { <vc_id>: "p2p_ordered" \| "unordered" } }`（与 `vc_binding` 同 key space） |
+| **实证** | `ADR-CEP-12:118-124`（决策 5 理由 + 依据） |
+| **现状** | `protocol_instance.schema.json:119-124` 为 per-network 单值 |
+| **建议落点** | `protocol_instance.schema.json` + `ADR-CEP-12` 决策 5 修订（与 **R-6'** 同一批 schema delta） |
+| **优先级** | **P0**（与 R-6' 捆绑；否则两个 map 的 key space 不一致） |
+
+### R-6'. 消息类词表定为 **6 类** + `vc_binding` / `ordering_assumption` 加 network 维度（schema 修订）
+
+> 🔶 **复核修订（per [N-2 / N-3 裁决](../roadmap/cep-interface-alignment-review-2026-10-21.md)）**：
+> 原 R-6 只要求「词表 5 类 + NoC Bundle 类别扩展」，现升级为「**词表 6 类** + **schema 逐网络化**」。
+
+| 项 | 内容 |
+|----|------|
+| **需求 A（词表）** | CEP 规范消息类词表 = **6 类**：`request` / `response` / `snoop` / `snoop_resp` / `atomic` / `query`。**明确排除** `CATEGORY_CREDIT`（流控类别）、`forward_data`（流 6）与 `snoop_completion_ack`（流 10）—— 后两者是已有槽位的**承载实例**，不单列 |
+| **需求 B（schema）** | `vc_binding` 与 `ordering_assumption` 加 **network 维度**（选项 A），delta 见 [§6.4.1](#641-delta) |
+| **实证 A** | `07 号 §3.1:174`（流 4 = `snoop_resp`）+ `CEN-Ib3` / `CEN-Ib4` / `CEN-Ib10`（三条 invariant 均以它为对象）+ `CppTLM/include/bundles/noc_bundles_tlm.hh:62`（`CATEGORY_CREDIT` 注释即「Credit 信号专用类别」） |
+| **实证 B** | `ADR-CEP-12:118-124`（决策 5）+ `:84-85`（决策 6）；`protocol_instance.schema.json:119-130` |
+| **现状** | 词表口径不一致（`32 号 §6.1` 声明用了 6 类，而原 R-6 只写 5 类）；schema 两字段均扁平 |
+| **建议落点** | `protocol_instance.schema.json`（两个字段的 `additionalProperties` 各嵌一层）+ `ADR-CEP-12` 决策 5 / 决策 6 修订 + `INV-CEP-12-IC2` 按 §6.4.2 重写 |
+| **CppTLM 侧附带项** | `noc_bundles_tlm.hh:60-62` 的 `CATEGORY_*` 需从 3 类扩到覆盖 6 类一致性消息类（**注**：`CATEGORY_*` 是 **flit 类别**（链路层），与 `vc_binding` 的**消息类**（一致性层）是两个正交维度 —— 建议 CEP 侧明确二者关系，避免又一次「词表混层」） |
+| **优先级** | **P0**（N-2 的直接落点；不修订则 C-4 不可机器验收） |
 
 ### R-7. CEP 侧需文档化「目录式远端查询」的流组合规范
 
@@ -895,7 +1095,7 @@ CEP 的 `INV-CEP-05-IC1`（协议瞬态态与协议私有态住插件内）是�
 | D-4 | 6→4 投影表 + 语义损失说明 | 本仓文档 §7.2 | C-2 / Q6 | ✅ 本文完成 |
 | D-5 | 协议实例声明（`moesi_gpu` / `mesif`） | 本仓文档 §6（JSON） | C-4 | ✅ 本文完成 |
 | D-6 | 一致性域声明（3 域 + 桥接粒度 + 域可见写判据） | 本仓文档 §5 | C-2 | ✅ 本文完成 |
-| D-7 | VC 分配表（4 VC × 5 消息类）+ network 命名空间清单 | 本仓文档 §6.1 + `22-nsa §0.5` 扩展 | C-4 / R-5 / R-6 | 🔶 §6.1 已给草案；network 清单待补 |
+| D-7 | **per-network** VC 分配矩阵（每网络 4 VC × 6 消息类）+ network 命名空间 + `vc_count` | 本仓文档 §6.0.2 + `22-nsa §0.5` 扩展 | C-4 / R-5' / R-5'' / R-6' | ✅ 矩阵已交付（§6.0.2）；network 清单待补 |
 | D-8 | 架构决策记录 | [`ADR-SOC-25`](../adr/ADR-SOC-25-cep-aligned-coherence-architecture.md) | C-1 | ✅ 已出 |
 | D-9 | `09-coherence-protocol.md` 的文档层返工（8 处） | 文档修订 | C-2 | 🔶 待执行 |
 | D-10 | R-1 ~ R-13 需求单 | 本仓文档 §11 | — | ✅ 本文完成 |
