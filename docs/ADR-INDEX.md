@@ -73,7 +73,7 @@ ArchForge 所在的 CppTLM 项目有**双层 ADR 体系**，两层**严格分离
 | [ADR-SOC-17](./adr/ADR-SOC-17-pcie-mock-ip.md) | 独立 PcieMockIP（gem5 风格简化端点） | Phase 9+ (2027-09-17) |
 | [ADR-SOC-20](./adr/ADR-SOC-20-cpptlm-abi-secondary-slimming.md) | CppTLM ABI 二级精简 18→15 函数 + 宏化（修订版） | Phase 9+ P5 |
 
-### 3.2 提案（📋 Proposed）— 14 份
+### 3.2 提案（📋 Proposed）— 15 份
 
 | ADR | 议题 | 关联阶段 |
 |-----|------|---------|
@@ -92,6 +92,7 @@ ArchForge 所在的 CppTLM 项目有**双层 ADR 体系**，两层**严格分离
 | [ADR-SOC-22](./adr/ADR-SOC-22-nsa-fabric-address-format.md) | NSA-aware 64-bit Fabric Address 格式 | NSA Stage 1 |
 | [ADR-SOC-23](./adr/ADR-SOC-23-nsa-vs-plan-b-selection.md) | NSA-aware 分布式 Scale-Up vs 方案 B 选型 | NSA Stage 1-3 |
 | [ADR-SOC-24](./adr/ADR-SOC-24-capability-based-multitenant-isolation.md) | Capability-Based 多租户隔离选型 | NSA Stage 1-3 |
+| [ADR-SOC-25](./adr/ADR-SOC-25-cep-aligned-coherence-architecture.md) | **一致性架构改采 CEP 框架对齐**（协议插件化 + 能力声明 + 3 域重划 + 撤下 `snoop_callback` + R-1~R-12 需求单） | 跨仓答复轮 (2026-10-21) |
 
 ### 3.3 状态未明确标注 — 1 份
 
@@ -145,6 +146,10 @@ ArchForge 所在的 CppTLM 项目有**双层 ADR 体系**，两层**严格分离
 │  · ADR-SOC-22  64-bit Fabric Address 格式                          │
 │  · ADR-SOC-23  Scale-Up vs 方案 B 选型                            │
 │  · ADR-SOC-24  Capability-Based 多租户隔离                         │
+├──────────────────────────────────────────────────────────────────┤
+│  CEP 对齐（2026-10-21，跨仓答复轮）                                │
+│  ──────────────────────────────────                              │
+│  · ADR-SOC-25  一致性架构改采 CEP 框架对齐                          │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -209,6 +214,7 @@ v1.0（2027-Q3+）
 | ADR-SOC-22 | `architecture/22-nsa-fabric-address-spec.md` |
 | ADR-SOC-23 | `architecture/23-dist-scale-up-topology.md` + `architecture/21-dist-scale-up-topology-b.md` |
 | ADR-SOC-24 | `architecture/27-nsa-capability.md` |
+| ADR-SOC-25 | `architecture/32-cep-based-coherence-architecture.md` + `architecture/09-coherence-protocol.md` + `architecture/25-nsa-hardware.md` §4 |
 
 ### 5.2 ADR → 微架构（microarchitecture/）引用
 
@@ -320,6 +326,7 @@ v1.0（2027-Q3+）
 
 | 日期 | 版本 | 修订 |
 |------|------|------|
+| 2026-10-21 | v3.1 | 新增 `ADR-SOC-25`（一致性架构改采 CEP 框架对齐） |
 | 2026-09-23 | v3.0 | ArchForge 重整：新建本文档；按战略阶段重排 ADR；新增 §4 演化路径追溯；§5 三维引用矩阵 |
 | 2026-09-20 | v2.3 | `docs/adr/README.md` v2.3 新增 ADR-SOC-21/22/23/24 |
 | 2026-08-20 | v2.2 | ADR-SOC-06 迁回本目录（per Phase I.4） |

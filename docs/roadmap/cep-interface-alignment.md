@@ -2,7 +2,9 @@
 
 > **类别**: SoC Architecture > Roadmap · **来源**: **CppTLM 跨仓请求**(CEP 项目的 M2 跨仓准入门前置)
 > **日期**: 2026-10-21 · **提出方**: CppTLM CEP DRI · **答复方**: ArchForge coherence owner
-> **状态**: 🟡 **待答复(6 问)** —— 本文件是**提问单**,不含任何对 ArchForge 的实现要求
+> **状态**: ✅ **已答复(6 问全部给出结论)** · 答复轮 2026-10-21
+> **答复载体**: [`ADR-SOC-25-cep-aligned-coherence-architecture.md`](../adr/ADR-SOC-25-cep-aligned-coherence-architecture.md)(决策)
+> + [`32-cep-based-coherence-architecture.md`](../architecture/32-cep-based-coherence-architecture.md)(详细设计 + 审阅结论 + R-1~R-12 需求单)
 > **关联 ArchForge 文档**: [09-coherence-protocol.md](../architecture/09-coherence-protocol.md) ·
 > [ADR-SOC-01-coherence-protocol-strategy.md](../adr/ADR-SOC-01-coherence-protocol-strategy.md) ·
 > [coherence-domain.md](../microarchitecture/coherence-domain.md) ·
@@ -67,19 +69,32 @@ Proposed Draft**。**解这个阻塞需要你们的 6 个结论**(§3)—— 这
 
 ## 2. 两侧接口面现状(摘要)
 
-| ArchForge 侧 | 位置 | CEP 侧 | 位置 |
-|-------------|------|--------|------|
-| `enum class Protocol { MESI, MOESI }` | `coherence-domain.md:68` | `perm` 4 值锁 | `ADR-CEP-02:66` |
-| `enum class CoherenceState { I,S,E,M,O,T }` | `coherence-protocol.md:112` | 协议状态住插件内 | `ADR-CEP-05:170` |
-| `enum class SnoopType { INVALIDATE, DOWNGRADE_TO_S, READ_SHARED, READ_EXCLUSIVE }` | `coherence-protocol.md:117` | canonical 10 流 | `ADR-CEP-02:55` |
-| `enum class SnoopResp { ACK, NACK, DATA, DATA_AND_ACK }` | `coherence-protocol.md:125` | — | — |
-| `class CoherenceProtocol`(抽象基类,5 个纯虚) | `coherence-protocol.md:133` | ProtocolEngine **插件**接口 | `ADR-CEP-12:163` |
-| `class CoherenceDomain`(已实现)+ `DomainRegistry` | `coherence-domain.md:70` / `:94` | — | — |
-| `class CoherenceBridge`(8 端口) | `coherence-bridge.md:135` | canonical 10 流(不新增端口) | `07 号 §5.1` |
-| `class SnoopFilter` + `SnoopEntry{addr,sharers,shared_state}` | `09-coherence-protocol.md:311` | `sharer_tracker` 5 实现 + caps 4 维 | `ADR-CEP-04 §2` |
-| `CoherentXBar`(每端口 `domain_id`) | `09-coherence-protocol.md §8` | — | — |
-| `register_cache_callback(CacheTLM*)` | `09-coherence-protocol.md:250` | 只允许经 **adapter** 交互 | `ADR-CEP-15:115` |
-| 配置 `params.protocol = "moesi_gpu"` / `cache_tlm_integration = "snoop_callback"` | `09-coherence-protocol.md §11` | `family` / `status` / `protocol_version` | `ADR-CEP-12:163` |
+> ⚠️ **答复轮勘误(2026-10-21)**: 本表的 **ArchForge 侧**各行是**设计文档级**的规约,
+> 其中 6 项在 CppTLM 仓**尚未实现或已废弃**。下表「答复轮状态」列给出逐条代码实证。
+> 完整取证见 [`32-cep-based-coherence-architecture.md §2`](../architecture/32-cep-based-coherence-architecture.md#2-对提问单的审阅结论8-项发现)。
+
+| ArchForge 侧 | 位置 | 答复轮状态(CppTLM 仓代码实证) | CEP 侧 | 位置 |
+|-------------|------|-------------------------------|--------|------|
+| `enum class Protocol { MESI, MOESI }` | `coherence-domain.md:68` | ⚠️ **已 `[[deprecated]]`**(`include/core/coherence_domain.hh:25-28`,per ADR-CEP-07A 决策 1) | `perm` 4 值锁 | `ADR-CEP-02:66` |
+| `enum class CoherenceState { I,S,E,M,O,T }` | `coherence-protocol.md:112` | ⚠️ 协议层**未落地**;仅 `include/ext/error_context_ext.hh:20` 有 debug 观测型枚举 | 协议状态住插件内 | `ADR-CEP-05:170` |
+| `enum class SnoopType { INVALIDATE, DOWNGRADE_TO_S, READ_SHARED, READ_EXCLUSIVE }` | `coherence-protocol.md:117` | ⚠️ **仅文档级**(全仓 grep 0 命中) | canonical 10 流 | `ADR-CEP-02:55` |
+| `enum class SnoopResp { ACK, NACK, DATA, DATA_AND_ACK }` | `coherence-protocol.md:125` | ⚠️ **仅文档级** | — | — |
+| `class CoherenceProtocol`(抽象基类,5 个纯虚) | `coherence-protocol.md:133` | ⚠️ **未实现**(`include/core/coherence_protocol.hh` 不存在,grep 0 命中) | ProtocolEngine **插件**接口 | `ADR-CEP-12:163` |
+| `class CoherenceDomain`(已实现)+ `DomainRegistry` | `coherence-domain.md:70` / `:94` | ⚠️ 存在但**纯配置层** + **已 deprecated**(`coherence_domain.hh:30`/`:55`);**无 snoop 成员** | — | — |
+| `class CoherenceBridge`(8 端口) | `coherence-bridge.md:135` | ⚠️ **未实现**(grep 0 命中) | canonical 10 流(不新增端口) | `07 号 §5.1` |
+| `class SnoopFilter` + `SnoopEntry{addr,sharers,shared_state}` | `09-coherence-protocol.md:311` | ⚠️ 与本仓 `snoop_filter.md:141-146` 的 `FilterEntry{bitset<16> sharers, CoherenceState, lru}` **不一致** | `sharer_tracker` 5 实现 + caps 4 维 | `ADR-CEP-04 §2` |
+| `CoherentXBar`(每端口 `domain_id`) | `09-coherence-protocol.md §8` | ⚠️ **仅文档级** | — | — |
+| `register_cache_callback(CacheTLM*)` | `09-coherence-protocol.md:250` | ⚠️ **未实现**(grep 0 命中);`cache_tlm.hh` 中 `snoop`/`coherence` 标识符 **0 次** → **天然满足 `INV-CEP-15-IC3`** | 只允许经 **adapter** 交互 | `ADR-CEP-15:115` |
+| 配置 `params.protocol = "moesi_gpu"` / `cache_tlm_integration = "snoop_callback"` | `09-coherence-protocol.md §11` | ⚠️ **仅文档级** | `family` / `status` / `protocol_version` | `ADR-CEP-12:163` |
+
+> **对提问单 §3-Q3 的影响**: 该问原文称「直连是**已实现**的(`include/core/coherence_domain.hh` 已有 snoop 相关成员)」。
+> **代码实证不成立** → 该问从「是否愿意改路径」变为「**不要建成这样**」,迁移成本为零。详见 §2 勘误与
+> [`32 号 §2 F2`](../architecture/32-cep-based-coherence-architecture.md#f2-严重结论反转-q3-的前提不成立答案从要不要改路径变成不要建成这样)。
+>
+> **对提问单 §3-Q4 的影响**: 该问原文称「ArchForge 侧当前**没有** VC / ordering 概念(这是**缺失**,不是冲突)」。
+> **代码实证不成立** —— `include/bundles/noc_bundles_tlm.hh:38` 已有 `vc_id`(0-3),与 CEP schema 同域;
+> `08-noc-interconnect.md:205-212` 已有 4 VC 死锁避免;NSA 已占 VC1=Atomic / VC2=Remote Query。
+> 该问的前提应改为「**已存在,只是未声明**」。
 
 > 完整的 13 项 gap 矩阵(G1~G13,含两侧 file:line)见 CppTLM 侧的
 > `docs/implementation/2026-10-21-cep-archforge-interface-alignment.md` §3。
@@ -92,6 +107,10 @@ Proposed Draft**。**解这个阻塞需要你们的 6 个结论**(§3)—— 这
 > **建议答复形式**:在 §5 的答复表里填「结论 + 一句话理由 + 若选方案 B 则给出落点文件」。
 
 ### Q1. 6 态 `CoherenceState` 的**归属层**
+
+> ✅ **答复:A —— 下沉到协议插件。**
+> 6 态是 MOESI/AMD 家族的**协议内编码**;`O`/`T` 在 4 值 `perm` 下无投影,正说明它们不是跨域接口的类型。
+> 顶层只保留 4 值 `perm` 投影(投影表见 [`32 号 §7.2`](../architecture/32-cep-based-coherence-architecture.md#72-6-态--4-值-projection-表答复-q6-a))。
 
 **问**:协议状态枚举(`I,S,E,M,O,T`)应**下沉到协议插件内部**,还是**保留在 ArchForge 顶层**
 (`coherence-protocol.md:112` 与 `09-coherence-protocol.md:242` 两处)?
@@ -114,6 +133,13 @@ Proposed Draft**。**解这个阻塞需要你们的 6 个结论**(§3)—— 这
 ---
 
 ### Q2. `CoherenceProtocol` 抽象基类的**归属仓**
+
+> ✅ **答复:B —— 下沉为 CppTLM 侧 ProtocolEngine 插件接口 + 3 项强制修订。**
+> ① `translate(probe, from, to)` 从插件接口**移除**(双协议感知与 `ADR-CEP-13` 决策 3 不兼容);
+> ② 请求语义**携带一致性标签**,不得用 `bool is_write/is_read`;
+> ③ 基类更名 `ProtocolEngine`,`can_coexist` 降为插件内部工具。
+> 连带:ArchForge `09 §10.1` 的「待新建 `include/core/coherence_protocol.hh`」**取消**;
+> 6×6 转换表**保留为协议语义规约**,交付 CppTLM 实现为 `MoesiGpuAdapter`。
 
 **问**:`class CoherenceProtocol`(`coherence-protocol.md:133`,5 个纯虚:
 `handle_probe` / `handle_request` / `can_coexist` / `translate` / `get_protocol_name`)
@@ -139,6 +165,12 @@ Proposed Draft**。**解这个阻塞需要你们的 6 个结论**(§3)—— 这
 
 ### Q3. `snoop_callback` 的**耦合路径**
 
+> ✅ **答复:A —— 改走 adapter;且当前无直连可改。**
+> 代码实证:`register_cache_callback` 全仓 **grep 0 命中**;`include/tlm/cache_tlm.hh` 中 `snoop`/`coherence` 标识符 **0 次**
+> → `INV-CEP-15-IC3` **当前已满足**,迁移成本为零。
+> 正确动作是**撤下设计**(5 处文档位置),而非改路径。
+> 并追加裁定:dGPU SoC 一致性缓存模型走 **CEP `Stub Cache Core`**(路线 a),`CacheTLM` 侧**永不**实现 snoop。
+
 **问**:`register_cache_callback(CacheTLM*)`(`09-coherence-protocol.md:250`)与配置项
 `cache_tlm_integration = "snoop_callback"`(`09 §11`)—— 这条**直连 CacheTLM** 的路径
 **保留**,还是**改走 adapter**?
@@ -163,6 +195,13 @@ Proposed Draft**。**解这个阻塞需要你们的 6 个结论**(§3)—— 这
 
 ### Q4. VC / 排序假设的**权威方**
 
+> ✅ **答复:B —— ArchForge 侧承载,并把「命名空间」与「绑定表」拆开。**
+> 本问前提「ArchForge 侧当前没有 VC/ordering 概念」**不成立**:
+> `include/bundles/noc_bundles_tlm.hh:38` 已有 `vc_id`(0-3),与 CEP schema 同域;
+> `08-noc-interconnect.md:205-212` 已有 4 VC 死锁避免;NSA 已占 VC1=Atomic / VC2=Remote Query。
+> 拆分:`vc_id` 命名空间 + 网络排序属性 → **ArchForge 侧**;消息类→`vc_id` 绑定表 → **CEP 协议实例声明**;
+> 死锁自由性论证 → **CEP 侧**(`ADR-CEP-09`)。
+
 **问**:`ordering_assumption`(网络 → `p2p_ordered`/`unordered`)与 `vc_binding`(消息类 → `vc_id` 0..3)
 应**由 CppTLM 侧承载**,还是**由 ArchForge 侧承载**?
 
@@ -185,6 +224,13 @@ Proposed Draft**。**解这个阻塞需要你们的 6 个结论**(§3)—— 这
 ---
 
 ### Q5. 协议**族边界**的权威方
+
+> ✅ **答复:A —— 边界由 CppTLM 侧定义并回写 ArchForge 文档;ArchForge 侧给出实例拆分口径。**
+> 口径:`moesi_gpu` = **1 个协议实例**(MESI 是其退化配置,不独立计);
+> `mesif` = **1 个协议实例**(与 `moesi_gpu` 并列做 A/B);
+> NSA 三级 Hardware Directory = **SharerTracker 选型**(不计 adapter);
+> `moesi_gpu` vs Ruby `MOESI_AMD_Base`/`GPU_VIPER` = **同语义不同实现**(依 `07 §5.1.4` 不重复计数)。
+> 连带:收敛 `25-nsa-hardware.md §4.4` + `§7` 开放问题 #4 → **不做单选,做可实例化的 A/B**。
 
 **问**:协议「族」的划分以哪一侧为准?ArchForge 侧的 MOESI/GPU 属 `industrial` 族,
 Ruby-SLICC 族(`MESI_Two_Level` / `MOESI_hammer` / `GPU_VIPER` / …,共 8 实例)由 CppTLM 侧提供 ——
@@ -211,6 +257,12 @@ Ruby-SLICC 族(`MESI_Two_Level` / `MOESI_hammer` / `GPU_VIPER` / …,共 8 实�
 
 ### Q6. 跨域接口是否接受 CEP 的 **4 值权限词表**
 
+> ✅ **答复:A —— 接受 4 值作跨域词表 + 交付 6→4 投影表 + 1 项 schema 请求(R-2)。**
+> 投影无歧义;`O`/`M` 合并的信息损失由 **Sharer Tracker** 补偿(CEP 分层既定做法),`T` 无投影(协议私有态)。
+> **R-2**:`perm` 需加「可静默升级」判别位 —— `moesi_gpu` 的 `state_transition[2][1]=3`(E+Write→M)满足
+> `ADR-CEP-13` 决策 3「域可见写」判据 (a),而 4 值 `perm` 无法区分静默/显式升级;
+> **该需求命中 `ADR-CEP-05 §10`(:223-225)已写下的触发条件**。
+
 **问**:跨域桥接两侧是否接受 CEP 的 `perm` **4 值**(`NONE`/`READ`/`UNIQUE`/`WRITEBACK`)
 作为**跨域接口的稳定词表**,而非 6 态 `CoherenceState`?
 
@@ -234,33 +286,49 @@ Ruby-SLICC 族(`MESI_Two_Level` / `MOESI_hammer` / `GPU_VIPER` / …,共 8 实�
 
 ## 4. P0 冲突摘要(供快速定位)
 
-> 完整 13 项见 CppTLM 侧清单 §3;此处只列**需要你们直接改文档**的 5 项。
+> 完整 13 项见 CppTLM 侧清单 §3;此处只列**需要 ArchForge 侧直接改文档**的 5 项。
+> **答复轮已逐项给出结论**,见末列。
 
-| # | 冲突 | ArchForge 侧位置 | CEP 侧约束 |
-|---|------|----------------|----------|
-| **P0-1** | 6 态枚举归属 | `coherence-protocol.md:112`、`09:242` | `ADR-CEP-05:170` |
-| **P0-2** | `enum class Protocol { MESI, MOESI }` 仍是**配置入口** | `coherence-domain.md:68` | `ADR-CEP-07A:99`(通用禁令) |
-| **P0-3** | **4 类 Bundle ↔ canonical 10 流** 无映射 | `coherence-bridge.md §2.2` | `ADR-CEP-02:55` |
-| **P0-4** | `snoop_callback` 直连 CacheTLM | `09:250`、`09 §11` | `ADR-CEP-15:115` |
-| **P0-5** | `CoherenceProtocol` 归属 | `coherence-protocol.md:133` | `ADR-CEP-12:163` |
+| # | 冲突 | ArchForge 侧位置 | CEP 侧约束 | **答复结论** |
+|---|------|----------------|----------|------------|
+| **P0-1** | 6 态枚举归属 | `coherence-protocol.md:112`、`09:242` | `ADR-CEP-05:170` | ✅ **A 下沉到协议插件**;顶层只留 4 值 `perm` 投影(6→4 投影表见 `32 号 §7.2`) |
+| **P0-2** | `enum class Protocol { MESI, MOESI }` 仍是**配置入口** | `coherence-domain.md:68` | `ADR-CEP-07A:99`(通用禁令) | ✅ **已消解** —— `include/core/coherence_domain.hh:25-28` 已 `[[deprecated]]`(per ADR-CEP-07A 决策 1);本仓侧只需停止把它写进新配置入口 |
+| **P0-3** | **4 类 Bundle ↔ canonical 10 流** 无映射 | `coherence-bridge.md §2.2` | `ADR-CEP-02:55` | ✅ **已交付映射表** —— [`32 号 §7.1`](../architecture/32-cep-based-coherence-architecture.md#7-p0-3-映射表archforge-类型--canonical-10-流)(逐类型 20 行,含 `CoherenceMsg` 解散 / `source_protocol` 删除 / `Flush`→流5 / `Invalidate`→流7+流3 / NSA Remote Query→流8+流3 / Remote Atomic→流1+atomic) |
+| **P0-4** | `snoop_callback` 直连 CacheTLM | `09:250`、`09 §11` | `ADR-CEP-15:115` | ✅ **A 改走 adapter** —— 且**无直连可改**(grep 0 命中);动作 = **撤下设计**(5 处文档位置),`CacheTLM` 天然满足 `INV-CEP-15-IC3` |
+| **P0-5** | `CoherenceProtocol` 归属 | `coherence-protocol.md:133` | `ADR-CEP-12:163` | ✅ **B 下沉为 ProtocolEngine 插件接口** + **3 项强制修订**(`translate` 移除 / 请求带 consistency label / 基类更名 `ProtocolEngine`);`09 §10.1` 的「待新建 `coherence_protocol.hh`」**取消** |
 
-**P0-3 不依赖 §3 的任何一问** —— 它是一份纯**映射表**(ArchForge 的
-`CacheReqBundle`/`CacheRespBundle`/`SnoopProbe`/`SnoopResp` 各自覆盖 CEP 的哪几条流,
-以及 `Flush` 这类 ArchForge 能力落在 CEP 的哪条流)。若你们愿意先做这一项,
-可在 6 问答复之前推进。
+**P0-3 不依赖 §3 的任何一问** —— 它是一份纯**映射表**。**答复轮已先行交付**,见上表末列与 `32 号 §7.1`。
 
 ---
 
-## 5. 答复表(请填)
+## 5. 答复表(已填)
+
+> **答复轮**: 2026-10-21 · **答复方**: ArchForge coherence owner
+> **决策载体**: [`ADR-SOC-25-cep-aligned-coherence-architecture.md`](../adr/ADR-SOC-25-cep-aligned-coherence-architecture.md)
+> **详细依据**: [`32-cep-based-coherence-architecture.md`](../architecture/32-cep-based-coherence-architecture.md)
 
 | # | 结论(A / B / 其他) | 一句话理由 | 若非 A,落点文件与改动范围 |
 |---|-------------------|-----------|--------------------------|
-| **Q1** 状态归属 | | | |
-| **Q2** 抽象基类归属 | | | |
-| **Q3** snoop callback 路径 | | | |
-| **Q4** VC / ordering 权威方 | | | |
-| **Q5** 协议族边界权威方 | | | |
-| **Q6** 跨域权限词表 | | | |
+| **Q1** 状态归属 | **A**(下沉到协议插件) | `I/S/E/M/O/T` 是 MOESI/AMD 家族的**协议内编码**;`O`/`T` 在 4 值 `perm` 下无投影,正说明它们**不是跨域接口的类型**(`INV-CEP-05-IC1` 分层正确) | — |
+| **Q2** 抽象基类归属 | **B**(下沉为 CppTLM 侧 ProtocolEngine 插件接口)**+ 3 项强制修订** | 「协议逻辑住 Plugin、能力以数据声明」是 CEP 立论基础;若基类留在 ArchForge,CEP 侧只剩声明 schema 而无可插拔逻辑接口 | —(选 B);**但须同时**: ① `translate(probe,from,to)` 从插件接口**移除**(双协议感知与 `ADR-CEP-13` 决策 3 不兼容) ② 请求语义**携带一致性标签**,不得用 `bool is_write/is_read` ③ 基类更名 `ProtocolEngine`,`can_coexist` 降为插件内部工具。落点: `09:399`(取消新建计划)、`microarchitecture/coherence-protocol.md:133-155`、`microarchitecture/coherence-bridge.md:49/81/121` |
+| **Q3** snoop callback 路径 | **A**(改走 adapter)—— **且无可改之物** | 直连**从未实现**(`register_cache_callback` grep 0 命中;`cache_tlm.hh` 的 `snoop`/`coherence` 标识符 **0 次**)→ `INV-CEP-15-IC3` **当前已满足**,正确动作是**撤下设计**而非改路径 | —(选 A);落点(5 处): `09:250`(删 `register_cache_callback`)、`09:256`(§5.3 改写)、`09:430`(§10.3 改写)、`09:459`(删 `snoop_callback` 配置项)、`microarchitecture/coherence-protocol.md:32`(Bundle 类型重述)。**并追加裁定**: dGPU SoC 一致性缓存模型走 **CEP `Stub Cache Core`**(路线 a),`CacheTLM` 侧**永不**实现 snoop → `register_cache_callback` **永不复现** |
+| **Q4** VC / ordering 权威方 | **B**(ArchForge 侧承载)**+ 拆分** | `vc_id` 0-3 命名空间**已存在**且与 CEP schema 同域(`noc_bundles_tlm.hh:38`),但**协议→VC 绑定表**是协议属性,归协议实例声明 | —(选 B);拆分口径: ① `vc_id` 命名空间 + 网络排序属性 → **ArchForge 侧**;② 消息类→`vc_id` 绑定表 → **CEP 协议实例声明**;③ 死锁自由性论证 → **CEP 侧**(`ADR-CEP-09`)。落点: `08-noc-interconnect.md:205-212`(补权威声明)、`22-nsa-fabric-address-spec.md §0.5`(Glossary 扩 network 维度) |
+| **Q5** 协议族边界权威方 | **A**(边界由 CppTLM 侧定义并回写 ArchForge 文档)**+ ArchForge 给出实例拆分口径** | ArchForge 贡献的不是 1 族 1 实例,而是 **2 个协议实例**(`moesi_gpu` / `mesif`)+ **1 个 SharerTracker 选型**(NSA 三级目录,不计 adapter) | —(选 A);ArchForge 侧实例拆分口径: `moesi_gpu` = **1 个实例**(MESI 是其退化配置,不独立计)、`mesif` = **1 个实例**(与 `moesi_gpu` 并列做 A/B)、NSA Hardware Directory = **SharerTracker 选型**(不计 adapter)、`moesi_gpu` vs Ruby `MOESI_AMD_Base`/`GPU_VIPER` = **同语义不同实现**(依 `07 §5.1.4` 不重复计数)。落点: `09:444`(补注)、`25-nsa-hardware.md §4.4` + `§7` 开放问题 #4(收敛) |
+| **Q6** 跨域权限词表 | **A**(接受 4 值作跨域词表)**+ 投影表 + 1 项 schema 请求** | 6→4 投影**无歧义**;`O`/`M` 合并的信息损失由 **Sharer Tracker** 补偿(CEP 分层既定做法),不构成额外成本 | —(选 A);交付 6→4 投影表(`32 号 §7.2`)+ 显式声明两处语义损失(`O`≈`M` 合并 / `T` 无投影)。**并提出 R-2**: `perm` 需加「可静默升级」判别位 —— `moesi_gpu` 的 `state_transition[2][1]=3`(E+Write→M)满足 `ADR-CEP-13` 决策 3「域可见写」判据 (a),而 4 值 `perm` 无法区分静默/显式升级;**该需求命中 `ADR-CEP-05 §10`(:223-225)已写下的触发条件** |
+
+### 5.1 附带提交:对 CEP 框架的需求(R-1 ~ R-12)
+
+> 完整的 12 项需求(每项含需求 / 本仓实证 / CEP 现状 / 建议落点 / 优先级)见
+> [`32 号 §11`](../architecture/32-cep-based-coherence-architecture.md#11-对-cep-框架的需求r-1--r-13)。
+
+| 优先级 | 编号 | 摘要 |
+|:------:|------|------|
+| **P0** | **R-2** | `perm` 加「可静默升级」判别位(命中 `ADR-CEP-05 §10` 已写下的触发条件) |
+| **P0** | **R-6** | 消息类词表 `{request,response,snoop,atomic,query}` + `noc_bundles_tlm.hh` 的 `CATEGORY_*` 扩展(现仅 3 类) |
+| **P0** | **R-9** | CEP 显式声明「插件接口**不含** `translate(from,to)`」(否则 Stage 1 接口形状被本仓接口绑架) |
+| **P0** | **R-11** | 「真实缓存 + CEP 协议」路线在 Stage 1 前定案(直接决定 Phase 7.C 是否还写 `snoop_callback`) |
+| **P0** | **R-13** | `ADR-CEP-11 §3` 版本锁定表需收录 `moesi-gpu-1.0` / `mesif-1.0`（`INV-CEP-11-IC1`: 表外取值 = **装配期 fail** → §6 的声明当前必然 fail,C-4 不可机器验收） |
+| **P1** | R-1 / R-3 / R-4 / R-5 / R-7 / R-8 / R-10 / R-12 | 分级目录第 6 种 SharerTracker 实现 / `consistency_labels` 按 fabric scope 分级 / `atomic` 承载一致性语义标签 / network 命名空间权威清单 / 目录式远端查询的流组合规范 / `family` 口径 / `CoherenceDomain` 弃用后的域概念对齐 / `perm` 与 Capability 的正交性 |
 
 **可选补充**:若某问的答案依赖尚未确定的设计,请写明**依赖项**与**预计可答复时间**,
 CppTLM 侧会相应把 M2 放行判据挂起(不视为阻塞答复)。
@@ -271,13 +339,29 @@ CppTLM 侧会相应把 M2 放行判据挂起(不视为阻塞答复)。
 
 CppTLM 侧的 M2 准入门在 §3 答复到位后的**可检查判据**(5 条,详见 CppTLM 侧清单 §6):
 
-| # | 判据 | 可自动化 |
-|---|------|:------:|
-| C-1 | ArchForge 侧存在**已合入**的 coherence 接口 PR(有 commit hash) | ❌ 跨仓 |
-| C-2 | 该 PR 含 P0-1 ~ P0-5 的结论(逐项可追溯到 ArchForge 文档行) | ❌ 人工 |
-| C-3 | §3 的 6 问各有**书面结论** | ❌ 人工 |
-| C-4 | CppTLM 的 `protocol_instance.schema.json` 与 ArchForge 侧声明**能双向映射** | ✅ 机器 |
-| C-5 | CppTLM 侧的 10 组反向验证仍全绿(M1 冻结 + lint + ctest) | ✅ 机器 |
+| # | 判据 | 可自动化 | 答复轮状态 |
+|---|------|:--------:|-----------|
+| C-1 | ArchForge 侧存在**已合入**的 coherence 接口 PR(有 commit hash) | ❌ 跨仓 | 🔴 **结构性不可闭合** —— 见下方协商请求 |
+| C-2 | 该 PR 含 P0-1 ~ P0-5 的结论(逐项可追溯到 ArchForge 文档行) | ❌ 人工 | ✅ 已满足(§4 末列)—— 载体为 `ADR-SOC-25` + `32 号` |
+| C-3 | §3 的 6 问各有**书面结论** | ❌ 人工 | ✅ 已满足(§5) |
+| C-4 | CppTLM 的 `protocol_instance.schema.json` 与 ArchForge 侧声明**能双向映射** | ✅ 机器 | 🔶 部分 —— 声明 JSON 已交付(`32 号 §6`),但消息类词表(R-6)与 network 清单(R-5)待对齐 |
+| C-5 | CppTLM 侧的 10 组反向验证仍全绿(M1 冻结 + lint + ctest) | ✅ 机器 | ⏳ 不在本仓职责内 |
+
+**🔴 治理级阻塞 —— 请求协商 C-1 的措辞**:
+
+> C-1 要求「ArchForge 侧存在**已合入**的 coherence 接口 **PR**(有 commit hash)」。
+> 但 **ArchForge 是纯设计仓**(`git log` 全为 `docs(...)` 提交,无 `src/`、无 `include/`),
+> **结构上无法**产出「接口 PR」→ C-1 永远无法闭合 → CEP 的 M2 准入门**永久阻塞**。
+
+**请求**:把 C-1 从「**接口 PR**」改为「**接口规约 PR**(design-spec PR)」——
+即以 [`ADR-SOC-25`](../adr/ADR-SOC-25-cep-aligned-coherence-architecture.md) +
+[`32-cep-based-coherence-architecture.md`](../architecture/32-cep-based-coherence-architecture.md) +
+本文件 §5 答复表为 C-1 的交付形态;**实现型 PR 归 CppTLM 仓**
+(per `ADR-CEP-00 §2` 决策 1 的代码归口:全部 C++ 实现归 CppTLM)。
+
+> **这是本轮唯一的治理级阻塞,优先级高于一切技术结论。**
+> 详见 [`ADR-SOC-25` D11](../adr/ADR-SOC-25-cep-aligned-coherence-architecture.md#d11-请求把放行判据-c-1-从接口-pr改为接口规约-pr)
+> 与 [`32 号 §2 F8`](../architecture/32-cep-based-coherence-architecture.md#f8-严重治理阻塞-c-1-放行判据与-archforge-仓性质冲突会造成永久阻塞)。
 
 **时间线**:CppTLM 侧不设 ArchForge 侧的排期承诺 —— §3 的 6 问 + P0-3 的映射表到位后,
 C-5 可即刻验证,C-1~C-4 随 PR 逐步闭合。
@@ -288,6 +372,8 @@ C-5 可即刻验证,C-1~C-4 随 PR 逐步闭合。
 
 | 材料 | 位置 | 用途 |
 |------|------|------|
+| **ArchForge 答复的决策载体** | [`docs/adr/ADR-SOC-25-cep-aligned-coherence-architecture.md`](../adr/ADR-SOC-25-cep-aligned-coherence-architecture.md) | 11 项决策(D1~D11)+ 9 份文档返工清单 + 8 项验收 |
+| **ArchForge 答复的详细设计** | [`docs/architecture/32-cep-based-coherence-architecture.md`](../architecture/32-cep-based-coherence-architecture.md) | 审阅结论(8 项发现)+ CEP 分层映射 + 3 域重划 + 2 个协议实例声明 + P0-3 映射表 + R-1~R-12 需求单 |
 | **完整对齐清单**(13 项 gap 矩阵 + PR 范围 + 5 条判据 + 32 个机器可读锚点) | `CppTLM/docs/implementation/2026-10-21-cep-archforge-interface-alignment.md` | 本提问单的完整依据 |
 | CEP 契约层真源(21 份 ADR + 66 条 invariant) | `CppTLM/docs/adr/ADR-CEP-*.md` · `CppTLM/docs/architecture/07-coherence-exploration-platform.md` | §3 各问的约束出处 |
 | CEP 协议实例声明 schema | `CppTLM/include/tlm/cep/protocol_instance.schema.json` | §1.2 的字段定义 |
@@ -296,4 +382,5 @@ C-5 可即刻验证,C-1~C-4 随 PR 逐步闭合。
 
 ---
 
-**版本**: v0.1 · **最后更新**: 2026-10-21 · **提出方**: CppTLM CEP DRI(builder mode)
+**版本**: v0.2 · **最后更新**: 2026-10-21 · **提出方**: CppTLM CEP DRI(builder mode) · **答复方**: ArchForge coherence owner
+**变更**: v0.1 提问单 → v0.2 **已填答复**(§2 勘误 + §4 逐项结论 + §5 答复表 + §5.1 需求单 + §6 治理阻塞协商请求)

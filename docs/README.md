@@ -27,7 +27,7 @@ ArchForge 共 **136 份**设计文档，按性质分为 4 大类（两大内容�
 
 | 类 | 目录 | 层级 | 数量 | 性质 | 受众 |
 |----|------|:----:|:----:|------|------|
-| **A. 系统架构** | `architecture/` | **SoC 系统级** | 44 | 系统级、分层、战略文档 | 架构师/评审者 |
+| **A. 系统架构** | `architecture/` | **SoC 系统级** | 45 | 系统级、分层、战略文档 | 架构师/评审者 |
 | **B. IP 微架构** | `microarchitecture/` | **IP 级** | 54 | 每个 IP/模块一份接口契约 | 实现者 |
 | **C. 决策记录** | `adr/` | 横切 | 27 | 24 份 ADR + README + 2 支持文档 | 架构师/评审者/集成者 |
 | **D. 路线图与规格** | `roadmap/` + `specs/` | 横切 | 11 | 阶段计划 + APU 形态 spec + 跨仓对齐提问单 | 集成者/规划者 |
@@ -36,7 +36,7 @@ ArchForge 共 **136 份**设计文档，按性质分为 4 大类（两大内容�
 ArchForge/
 ├── README.md                         ← 本文件（架构入口）
 ├── ADR-INDEX.md                      ← ADR 决策体系导览
-├── architecture/                     ← A 类（44 份）
+├── architecture/                     ← A 类（45 份）
 │   ├── INDEX.md
 │   ├── 00-overview.md                 ★ v1.0 dGPU 总架构蓝图（权威）
 │   ├── 01..10-*.md                   ← 7 层架构分解 (L1..L10)
@@ -93,10 +93,11 @@ ArchForge/
 │                                                                  │
 │  演进侧链 ────────────────                                       │
 │  · roadmap/phase9-p*.md       · Phase 9+ 近期计划                │
-│  · roadmap/cep-interface-alignment · CEP 跨仓接口对齐提问单      │
+│  · roadmap/cep-interface-alignment · CEP 跨仓接口对齐（已答复）   │
 │  · roadmap/roadmap-mvp-to-v05 · v0.5 历史快照                   │
 │  · architecture/20..21-*.md    · 子系统级详细（应读为子目录）    │
 │  · architecture/22..31-*.md    · NSA-aware 系列（中长期）        │
+│  · architecture/32-*.md         · CEP 对齐一致性架构（跨仓）    │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -104,7 +105,7 @@ ArchForge/
 
 | 议题 | 架构蓝图 | 决策记录 | 模块微架构 |
 |------|---------|---------|----------|
-| Coherence 协议 | `architecture/09-coherence-protocol.md` | `ADR-SOC-01`, `ADR-SOC-09` (D1) | `microarchitecture/coherence-protocol.md`, `coherence-domain.md`, `coherence-bridge.md`, `snoop_filter.md` |
+| Coherence 协议 | `architecture/09-coherence-protocol.md` | `ADR-SOC-01`, `ADR-SOC-09` (D1), **`ADR-SOC-25`** (CEP 对齐) | `microarchitecture/coherence-protocol.md`, `coherence-domain.md`, `coherence-bridge.md`, `snoop_filter.md` |
 | PCIe EP | `architecture/01-host-interface.md` | `ADR-SOC-07`, `ADR-SOC-11`, `ADR-SOC-12`, `ADR-SOC-17` | `microarchitecture/dgpu-soc-pcie-slice.md`, `pcie-root-complex.md`, `host-bypass.md` |
 | GMMU/IOMMU | `architecture/20-gmmu-*.md` | (待补 ADR) | (在 `microarchitecture/io-dma.md` 中) |
 | SM/CU | `architecture/05-sm-compute-unit.md` | `ADR-SOC-02`, `ADR-SOC-16` | `microarchitecture/gpu-gputlm.md`, `command-processor.md`, `tmu-dispatch-processor.md` |

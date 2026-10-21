@@ -1,26 +1,28 @@
 # Architecture 文档索引
 
-> **版本**: v3.0 (2026-09-23 重整版) · **范围**: `docs/architecture/` 全部 32 份文档
+> **版本**: v3.1 (2026-10-21 新增 32 号 CEP 对齐一致性架构) · **范围**: `docs/architecture/` 全部 45 份文档
 > **关联总览**: [`../README.md`](../README.md) · **关联决策**: [`../ADR-INDEX.md`](../ADR-INDEX.md)
 
 ---
 
-## 1. 文档分组（7 大类，32 份）
+## 1. 文档分组（8 大类，45 份）
 
 | 组 | 编号 | 主题 | 份数 | 性质 |
 |----|------|------|:----:|------|
 | **A. 总览蓝图** | 00 | dGPU SoC v1.0 总架构蓝图（权威起点） | 1 | ⭐ 唯一权威总览 |
 | **B. 7 层架构分解** | 01-10 | L1..L10 各层架构 | 10 | 子系统蓝图 |
 | **C. CDNA + SM 重构 + 审计** | 11-15 | CDNA 真实 ISA / 校准 / EMU 选型 / 架构审计 / SM 重构 | 5 | 战略 + 审计 |
-| **D. PCIe 子链路** | 16-19 | PCIe EP + SDMA + 入口 + 17 端口 IP 微架构 | 4 | PCIe 详细 |
+| **D. PCIe 子链路** | 16-19, 19a | PCIe EP + SDMA + 入口 + 17 端口 IP 微架构 + 驱动可见最小 SoC | 5 | PCIe 详细 |
 | **E. 子系统详细** | 20-21 | GMMU + DMA + Fabric + TEE-UDD + Topology（注：重号系列，应读为子目录） | 13 | 子系统级 MVP + Roadmap |
 | **F. NSA-aware Scale-Up** | 22-31 | NSA-aware 完整 SoC + CXL + 故障注入 | 10 | NSA Stage 1-3 |
-| **G. 总计** | — | — | **32** | — |
+| **G. CEP 对齐一致性架构** | 32 | CEP 框架下的一致性重设计（跨仓对齐） | 1 | 跨仓答复轮 |
+| **H. 总计** | — | — | **45** | — |
 
 ```
-总计: 1 + 10 + 5 + 4 + 13 + 10 = 43 ❌（与 README 旧声称一致）
+总计: 1 + 10 + 5 + 5 + 13 + 10 + 1 = 45 ✅（2026-10-21 实测 `ls docs/architecture/*.md | wc -l` = 46,扣除 INDEX.md）
 
-修正后实际: 32 份（README 计数已过期）
+历史漂移修正: v3.0 曾写「32 份」且分组求和为 43 —— 两者皆与实际不符;
+本版按 2026-10-21 实测校正为 45（D 组补入 19a-driver-visible-minimal-soc.md）。
 ```
 
 ---
@@ -119,6 +121,12 @@
 | [30](./30-nsa-comprehensive-supplement.md) | `30-nsa-comprehensive-supplement.md` | **NSA-Compat**: NSA-aware Scale-Up 综合补充规范 v0.1 (Oracle 评审响应) | Draft v0.1 |
 | [31](./31-nsa-fault-injection-plan.md) | `31-nsa-fault-injection-plan.md` | **NSA-FIT**: NSA-aware Scale-Up 故障注入测试计划 v0.1 | Draft v0.1 |
 
+### G. CEP 对齐一致性架构（1 份）
+
+| 序号 | 文件 | 主题 | 状态 |
+|:----:|------|------|:----:|
+| [32](./32-cep-based-coherence-architecture.md) | `32-cep-based-coherence-architecture.md` | **CEP-Coh**: CEP 框架下的 dGPU SoC + NSA 多卡一致性重设计（提问单审阅 8 项发现 + 体系 A/B 收敛诊断 + CEP 分层映射 + 3 域重划 + 2 个协议实例声明 + P0-3 映射表 + 6 问答复 + R-1~R-12 需求单） | 📋 Draft v0.1 |
+
 ---
 
 ## 3. 阅读路径（按角色）
@@ -139,9 +147,10 @@
 [11..13-cdna-*.md]                         ← 4. CDNA 真实 ISA（v1.0+）
 [15-sm-microarchitecture-design.md]        ← 5. SM 重构（v1.0 关键）
 [19-pcie-ip-microarchitecture.md]          ← 6. PCIe IP（v1.0 关键）
+[32-cep-based-coherence-architecture.md]   ← 7. 一致性架构（CEP 对齐，含 SoC 内 + NSA 跨卡收敛）
 
-[../ADR-INDEX.md]                          ← 7. 决策追溯
-[../microarchitecture/README.md]                     ← 8. 模块索引
+[../ADR-INDEX.md]                          ← 8. 决策追溯
+[../microarchitecture/README.md]                     ← 9. 模块索引
 ```
 
 ### 3.2 实现者（某一层 / 某一模块）
@@ -160,7 +169,8 @@
 [00-overview.md]                           ← 1. 总览背景
 [21-soc-topology-mvp.md]                   ← 2. MAS-3.1 V3.1-Rev2.0 顶层布局
 [22..31-nsa-*.md]                          ← 3. NSA-aware Stage 1-3 详细
-[../ADR-INDEX.md §3.2 ADR-SOC-21..24]      ← 4. NSA-aware 决策
+[32-cep-based-coherence-architecture.md]   ← 4. 一致性收敛（体系 A SoC 内 + 体系 B 跨卡 → CEP）
+[../ADR-INDEX.md §3.2 ADR-SOC-21..25]      ← 5. NSA-aware + CEP 对齐决策
 ```
 
 ---
