@@ -30,7 +30,7 @@ ArchForge 共 **136 份**设计文档，按性质分为 4 大类（两大内容�
 | **A. 系统架构** | `architecture/` | **SoC 系统级** | 45 | 系统级、分层、战略文档 | 架构师/评审者 |
 | **B. IP 微架构** | `microarchitecture/` | **IP 级** | 54 | 每个 IP/模块一份接口契约 | 实现者 |
 | **C. 决策记录** | `adr/` | 横切 | 27 | 24 份 ADR + README + 2 支持文档 | 架构师/评审者/集成者 |
-| **D. 路线图与规格** | `roadmap/` + `specs/` | 横切 | 11 | 阶段计划 + APU 形态 spec + 跨仓对齐提问单 | 集成者/规划者 |
+| **D. 路线图与规格** | `roadmap/` + `specs/` | 横切 | 12 | 阶段计划 + APU 形态 spec + 跨仓对齐提问单 + 跨仓答复回执 | 集成者/规划者 |
 
 ```
 ArchForge/
@@ -53,10 +53,12 @@ ArchForge/
 │   ├── ADR-SOC-01..24-*.md           ← 24 份决策记录
 │   ├── revision-plan-v1.0.md         ← ADR 修订规划
 │   └── hsk9-announcement-draft.md    ← 历史公告草稿
-├── roadmap/                          ← D 类（10 份）
+├── roadmap/                          ← D 类（11 份）
 │   ├── README.md
 │   ├── roadmap-mvp-to-v05.md         ← v0.5 历史快照（🔒 冻结）
-│   ├── cep-interface-alignment.md   ← CEP ↔ ArchForge 接口对齐提问单（🟡 待答复）
+│   ├── cep-interface-alignment.md   ← CEP ↔ ArchForge 接口对齐提问单（✅ 已答复）
+│   ├── cep-interface-alignment-review-2026-10-21.md  ← CEP 对齐复核回执 N-1~N-4
+│   ├── cep-interface-alignment-response-2026-10-22.md ← CEP 待回应清单 10 条答复
 │   └── phase9-p[0-5]-*.md            ← Phase 9 各子阶段
 └── specs/
     └── apu-soc-design.md             ← APU 形态 spec（1056 行）

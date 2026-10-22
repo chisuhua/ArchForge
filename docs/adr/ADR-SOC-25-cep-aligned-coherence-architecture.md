@@ -175,8 +175,18 @@ per `ADR-CEP-13` 决策 1：一致性域 = 一个 Ordering Point 生效 + 一套
 「域可见写」判据 (a)（终态允许 store 命中且无需外部通信），因此**跨域时必须触发传播**，
 而 4 值 `perm` 无法区分「静默升级」与「显式请求升级」。
 
-> 该需求**命中 CEP `ADR-CEP-05 §10`（`:223-225`）已写下的触发条件**：
+> 该需求**命中 CEP `ADR-CEP-05 §7`**（α 失效判据 2；**注**：判据 2 在 **§7「α 失效判据」**，**非** §10 —— §10 是「关联 ADR / OpenSpec」；CppTLM commit `f034d92a` 已在其仓内修正 24 处同款笔误）**已写下的触发条件**：
 > 「若组合协议需要区分静默 E→M 升级与显式请求升级，则 Stub 的 4 值 `perm` 表达力不足 → 重新评估 (β) 独立接口方案」。
+
+> 🔶 **复核修订（2026-10-22，per [CEP 待回应清单答复回执 §1](../roadmap/cep-interface-alignment-response-2026-10-22.md)）**：
+> 本决策的**结论不变**（仍向 CEP 提出 R-2），但**论证链补全** —— 原文只评估了判据 (a) 就下了
+> 「跨域时必须触发传播」的结论，**缺 (b) 一环**（`ADR-CEP-13` 决策 3 的判据是 **(a) ∧ (b)**）。
+> **判据 (b) 现已评估并成立**（`s2 = M` 的 snoop 响应携带数据值 → 该状态接受「导致数据值响应的转发请求」）
+> → **R-2 命中** `ADR-CEP-05 §7` 判据 2。逐条论证见 [`32 号 §5.2.1`](../architecture/32-cep-based-coherence-architecture.md#521-moesi_gpu-的-e--m-的判据评估a--b2026-10-22-补齐)。
+>
+> **状态归属（per Q-3c 裁决）**：判据 2 的**状态**由 **CEP 侧**记入 `ADR-CEP-05 §13 Status Update`；
+> 本 ADR **不**复制该状态值，只在 §6 Status Update 记录「我方论证已闭合」。
+> **R-2 的落 schema 仍待 CEP 侧**（本仓无代码仓，只出规约）。
 
 ### D8. `vc_id` 命名空间与网络排序属性由本仓承载；协议→VC 绑定表归协议实例声明
 
@@ -236,7 +246,7 @@ delta 见 [`32 号 §6.4`](../architecture/32-cep-based-coherence-architecture.m
 
 | # | 需求 | 阻塞什么 |
 |---|------|---------|
-| **R-2** | `perm` 加「可静默升级」判别位 | D-CPU↔D-GPU 跨域正确性论证；命中 `ADR-CEP-05 §10` 已写下的触发条件 |
+| **R-2** | `perm` 加「可静默升级」判别位 | D-CPU↔D-GPU 跨域正确性论证；命中 `ADR-CEP-05 §7`（α 失效判据 2）已写下的触发条件 |
 | **R-5'** | fabric config 提供**网络命名空间 + 每网络 `vc_count`** | `vc_binding` 逐网络化的直接前提；C-4 双向映射依赖此项 |
 | **R-5''** | `ordering_assumption` 从 per-network 单值升为 **per-(network, vc_id)** | 与 R-6' 捆绑；否则两个 map 的 key space 不一致 |
 | **R-6'** | 消息类词表定为 **6 类**（含 `snoop_resp`；排除 `CATEGORY_CREDIT` / `forward_data` / `snoop_completion_ack`）+ `vc_binding` / `ordering_assumption` 加 **network 维度**（schema 修订） | N-2 / N-3 的直接落点；不修订则 C-4 不可机器验收 |
@@ -338,12 +348,14 @@ R-10（`CoherenceDomain` 弃用后的域概念对齐）、R-12（`perm` 与 Capa
 | V-3 | P0-3 映射表存在且逐类型可追 | `32 号 §7.1` | ✅ 已满足 |
 | V-4 | 6→4 投影表存在且标注两处语义损失 | `32 号 §7.2` | ✅ 已满足 |
 | V-5 | 协议实例声明可被 CEP schema 校验 | `32 号 §6.1/§6.2` 的 JSON → schema 校验 | 🔴 **待 CEP 侧 schema 修订** —— 声明已按**目标形式**（per-network）书写；在 R-6' 的 delta 合入前，按**现行** schema 校验会 fail（**预期**，不做降级写法） |
-| V-6 | 3 域声明含桥接粒度 + 域可见写判据 | `32 号 §5` | ✅ 已满足 |
+| V-6 | 3 域声明含桥接粒度 + 域可见写判据 | `32 号 §5` | ✅ 已满足（**(a) ∧ (b) 双向评估**已于 2026-10-22 补齐，见 `32 号 §5.2.1`） |
 | V-7 | 9 份文档返工完成且无悬空引用 | 返工 diff + 全仓 `file:line` 检查 | 🔶 **进行中** —— 返工清单见 §3.1；⚠️ **返工落地会打断 CppTLM `cep_archforge_alignment_check.sh` 的 21 个 ArchForge 锚点**（其中 20 个正指向返工位置）→ **必须与 CppTLM 侧锚点重生成同批** |
-| V-8 | R-1 ~ R-13 需求单送达并有 CEP 侧回执 | CEP 侧 reply | 🔶 **部分满足** —— 送达 ✅（commit `6020f42`）；CEP 侧回执 = [**复核回执 N-1 ~ N-4**](../roadmap/cep-interface-alignment-review-2026-10-21.md)（2026-10-21）；**R-1 ~ R-13 的逐条技术回执仍待** |
+| V-8 | R-1 ~ R-13 需求单送达并有 CEP 侧回执 | CEP 侧 reply | 🔶 **部分满足** —— 送达 ✅（commit `6020f42`）；CEP 侧回执 = [**复核回执 N-1 ~ N-4**](../roadmap/cep-interface-alignment-review-2026-10-21.md)（2026-10-21）+ [**CEP 回执 v1.1**（CppTLM `2026-10-21-cep-archforge-response-receipt.md`，R-1 ~ R-13 逐条裁定）+ [**待回应清单**（CppTLM `0cd52a67`）]；**本轮已应答清单 10 条**（2026-10-22，见 [`答复回执`](../roadmap/cep-interface-alignment-response-2026-10-22.md)）→ **R-2 的判据 (b) 论证闭合、状态「命中」**；**R-2 落 schema 仍待 CEP 侧** |
 
-> **V-8 的口径说明**：本轮复核回执的是 **N-1 ~ N-4（对 `6020f42` 交付物的复核）**，
-> **不等于** CEP 侧对 R-1 ~ R-13 的逐条技术回执 —— 后者仍待，不作已满足计。
+> **V-8 的口径说明**：2026-10-21 的复核回执是 **N-1 ~ N-4（对 `6020f42` 交付物的复核）**，
+> **不等于** CEP 侧对 R-1 ~ R-13 的逐条技术回执 —— 后者已于 2026-10-21 ~ 2026-10-22 到位
+> （CppTLM 回执 v1.1 逐条裁定 + 本仓 10 条清单答复）→ **「回执到位」的条件已满足**；
+> 但 **「落 schema / 落实现」的条件仍未满足**（V-5 仍为 🔴，R-2 仍待 CEP 侧落 schema）→ V-8 仍记为 🔶 部分满足，**不作已满足计**。
 
 > **V-5 / V-7 / V-8 三项是本 ADR Accepted 后的跟踪项**，不阻塞决策生效；
 > 跟踪载体 = 本节 + [`复核回执`](../roadmap/cep-interface-alignment-review-2026-10-21.md) §5（放行判据影响）。
@@ -354,10 +366,11 @@ R-10（`CoherenceDomain` 弃用后的域概念对齐）、R-12（`perm` 与 Capa
 
 | 日期 | 版本 | 修订 |
 |------|------|------|
+| 2026-10-22 | v1.1 | **应答 CppTLM「待回应清单」10 条**（[`答复回执`](../roadmap/cep-interface-alignment-response-2026-10-22.md)）—— **决策不变**（D1 ~ D11 全部维持），本轮只做**论证补全 + 引用修正 + 验收状态同步**：<br>① **D7 论证补全** —— 原文只评估判据 (a) 就下了「跨域时必须触发传播」的结论（**缺 (b) 一环**）；(b) 现已评估并**成立**（`s2 = M` 的 snoop 响应携带数据值）→ **R-2 命中** `ADR-CEP-05 §7` 判据 2；<br>② **状态归属**（per Q-3c）—— 判据 2 的**状态**由 **CEP 侧**记入 `ADR-CEP-05 §13 Status Update`，本 ADR **不复制**该状态值；<br>③ **引用修正** —— `ADR-CEP-05 §10` → **`§7`**（判据 2 在 §7「α 失效判据」，§10 是「关联 ADR / OpenSpec」；CppTLM `f034d92a` 已修其仓内 24 处同款笔误）；<br>④ **§5 验收项** V-6 升级为「(a)∧(b) 双向评估」、V-8 补记本轮清单应答与 R-2 的论证闭合（**落 schema 仍待 CEP 侧**）。<br>**Accepted 状态不变**；本轮**未**新增/撤销任何决策。 |
 | 2026-10-21 | v1.0 | **Accepted** —— 提交复核新发现 N-1（P0，VC 分配双答案）/ N-2（P0，`vc_binding` 缺 network 维度）/ N-3（P1，词表漏 `snoop_resp`）/ N-4（P1，ADR 状态）**全部裁决完毕**并回写：<br>① **D8 改为 per-network 矩阵**（片上 `compute_noc` 与卡间 `ualink_fabric` 是同一矩阵的两行，不是两套互斥答案；`08 §4.3` 四槽划分保持不变，UALink VC3 本次补齐）；<br>② **D10 升为 R-5' / R-5'' / R-6'**（P0 由 5 项增至 7 项），并向 CEP 侧提交 **schema delta**（`32 号 §6.4`）；<br>③ 消息类词表定为 **6 类**（排除 `CATEGORY_CREDIT` / `forward_data` / `snoop_completion_ack`）；<br>④ §5 验收项状态显式化（V-5/V-7/V-8 标注真实状态，**未完成项不作已完成计**）。<br>裁决全文见 [`复核回执 N-1 ~ N-4`](../roadmap/cep-interface-alignment-review-2026-10-21.md) |
 | 2026-10-21 | v0.1 | 首版：对齐 CppTLM CEP 提问单（6 问）+ 体系 A/B 收敛诊断 + 11 项决策 + 9 份文档返工清单 + R-1~R-12 需求单 + 8 项验收 |
 
 ---
 
 **关联 OpenSpec change**: 待创建（`openspec/changes/2026-10-21-archforge-cep-alignment/`）
-**下次更新**: 待 CEP 侧对 R-1 ~ R-13 逐条回执后追加「CEP 侧回执」列（不改变本 ADR 的 Accepted 状态）
+**下次更新**: 待 **D-9 批 2**（计划 2026-11-05）落地后同步 `32 号` 的锚点 + 追加「CEP 侧回执」列（不改变本 ADR 的 Accepted 状态）

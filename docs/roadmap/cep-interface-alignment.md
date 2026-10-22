@@ -3,6 +3,7 @@
 > **类别**: SoC Architecture > Roadmap · **来源**: **CppTLM 跨仓请求**(CEP 项目的 M2 跨仓准入门前置)
 > **日期**: 2026-10-21 · **提出方**: CppTLM CEP DRI · **答复方**: ArchForge coherence owner
 > **状态**: ✅ **已答复(6 问全部给出结论)** · 答复轮 2026-10-21 · **复核轮 2026-10-21(N-1~N-4 已裁决,见 [复核回执](./cep-interface-alignment-review-2026-10-21.md))**
+> · **清单轮 2026-10-22(CppTLM「待回应清单」10 条已逐条答复,见 [答复回执](./cep-interface-alignment-response-2026-10-22.md))**
 > **答复载体**: [`ADR-SOC-25-cep-aligned-coherence-architecture.md`](../adr/ADR-SOC-25-cep-aligned-coherence-architecture.md)(决策)
 > + [`32-cep-based-coherence-architecture.md`](../architecture/32-cep-based-coherence-architecture.md)(详细设计 + 审阅结论 + R-1~R-12 需求单)
 > **关联 ArchForge 文档**: [09-coherence-protocol.md](../architecture/09-coherence-protocol.md) ·
@@ -260,8 +261,9 @@ Ruby-SLICC 族(`MESI_Two_Level` / `MOESI_hammer` / `GPU_VIPER` / …,共 8 实�
 > ✅ **答复:A —— 接受 4 值作跨域词表 + 交付 6→4 投影表 + 1 项 schema 请求(R-2)。**
 > 投影无歧义;`O`/`M` 合并的信息损失由 **Sharer Tracker** 补偿(CEP 分层既定做法),`T` 无投影(协议私有态)。
 > **R-2**:`perm` 需加「可静默升级」判别位 —— `moesi_gpu` 的 `state_transition[2][1]=3`(E+Write→M)满足
-> `ADR-CEP-13` 决策 3「域可见写」判据 (a),而 4 值 `perm` 无法区分静默/显式升级;
-> **该需求命中 `ADR-CEP-05 §10`(:223-225)已写下的触发条件**。
+> `ADR-CEP-13` 决策 3「域可见写」判据 **(a) ∧ (b)**(判据 (b) 已于 2026-10-22 补齐并**成立**,per [`答复回执 §1.1`](./cep-interface-alignment-response-2026-10-22.md)),
+> 而 4 值 `perm` 无法区分静默/显式升级;
+> **该需求命中 `ADR-CEP-05 §7`(α 失效判据 2)已写下的触发条件**。
 
 **问**:跨域桥接两侧是否接受 CEP 的 `perm` **4 值**(`NONE`/`READ`/`UNIQUE`/`WRITEBACK`)
 作为**跨域接口的稳定词表**,而非 6 态 `CoherenceState`?
@@ -314,7 +316,7 @@ Ruby-SLICC 族(`MESI_Two_Level` / `MOESI_hammer` / `GPU_VIPER` / …,共 8 实�
 | **Q3** snoop callback 路径 | **A**(改走 adapter)—— **且无可改之物** | 直连**从未实现**(`register_cache_callback` grep 0 命中;`cache_tlm.hh` 的 `snoop`/`coherence` 标识符 **0 次**)→ `INV-CEP-15-IC3` **当前已满足**,正确动作是**撤下设计**而非改路径 | —(选 A);落点(5 处): `09:250`(删 `register_cache_callback`)、`09:256`(§5.3 改写)、`09:430`(§10.3 改写)、`09:459`(删 `snoop_callback` 配置项)、`microarchitecture/coherence-protocol.md:32`(Bundle 类型重述)。**并追加裁定**: dGPU SoC 一致性缓存模型走 **CEP `Stub Cache Core`**(路线 a),`CacheTLM` 侧**永不**实现 snoop → `register_cache_callback` **永不复现** |
 | **Q4** VC / ordering 权威方 | **B**(ArchForge 侧承载)**+ 拆分** **+ per-network 矩阵**(复核修订) | `vc_id` 0-3 命名空间**已存在**且与 CEP schema 同域(`noc_bundles_tlm.hh:38`);但**VC 分配是 per-network 的** —— 片上 `compute_noc`(`08 §4.3`) 与卡间 `ualink_fabric`(`25-nsa` VC0/1/2 + 本次补齐 VC3)**是同一张矩阵的两行,不是两套互斥答案**;原扁平 `vc_binding` 造成语义漂移,已改为逐网络 | —(选 B);拆分口径: ① `vc_id` 命名空间 + **网络清单 + 每网络 `vc_count`** + 网络排序属性 → **ArchForge 侧**;② 消息类→`vc_id` 绑定表(**逐网络**)→ **CEP 协议实例声明**;③ 死锁自由性论证 → **CEP 侧**(`ADR-CEP-09`)。**连带 schema 修订**(选项 A:给 `vc_binding` / `ordering_assumption` 加 network 维度)→ **R-5' / R-5'' / R-6'**,delta 见 `32 号 §6.4`。落点: `08-noc-interconnect.md §4.3`(per-network 标注 + 6 类映射)、`25-nsa-hardware.md §4.3`(UALink 行 + VC3)、`22-nsa-fabric-address-spec.md §0.5`(Glossary 扩 network 维度)、`32 号 §6.0`(权威矩阵) |
 | **Q5** 协议族边界权威方 | **A**(边界由 CppTLM 侧定义并回写 ArchForge 文档)**+ ArchForge 给出实例拆分口径** | ArchForge 贡献的不是 1 族 1 实例,而是 **2 个协议实例**(`moesi_gpu` / `mesif`)+ **1 个 SharerTracker 选型**(NSA 三级目录,不计 adapter) | —(选 A);ArchForge 侧实例拆分口径: `moesi_gpu` = **1 个实例**(MESI 是其退化配置,不独立计)、`mesif` = **1 个实例**(与 `moesi_gpu` 并列做 A/B)、NSA Hardware Directory = **SharerTracker 选型**(不计 adapter)、`moesi_gpu` vs Ruby `MOESI_AMD_Base`/`GPU_VIPER` = **同语义不同实现**(依 `07 §5.1.4` 不重复计数)。落点: `09:444`(补注)、`25-nsa-hardware.md §4.4` + `§7` 开放问题 #4(收敛) |
-| **Q6** 跨域权限词表 | **A**(接受 4 值作跨域词表)**+ 投影表 + 1 项 schema 请求** | 6→4 投影**无歧义**;`O`/`M` 合并的信息损失由 **Sharer Tracker** 补偿(CEP 分层既定做法),不构成额外成本 | —(选 A);交付 6→4 投影表(`32 号 §7.2`)+ 显式声明两处语义损失(`O`≈`M` 合并 / `T` 无投影)。**并提出 R-2**: `perm` 需加「可静默升级」判别位 —— `moesi_gpu` 的 `state_transition[2][1]=3`(E+Write→M)满足 `ADR-CEP-13` 决策 3「域可见写」判据 (a),而 4 值 `perm` 无法区分静默/显式升级;**该需求命中 `ADR-CEP-05 §10`(:223-225)已写下的触发条件** |
+| **Q6** 跨域权限词表 | **A**(接受 4 值作跨域词表)**+ 投影表 + 1 项 schema 请求** | 6→4 投影**无歧义**;`O`/`M` 合并的信息损失由 **Sharer Tracker** 补偿(CEP 分层既定做法),不构成额外成本 | —(选 A);交付 6→4 投影表(`32 号 §7.2`)+ 显式声明两处语义损失(`O`≈`M` 合并 / `T` 无投影)。**并提出 R-2**: `perm` 需加「可静默升级」判别位 —— `moesi_gpu` 的 `state_transition[2][1]=3`(E+Write→M)满足 `ADR-CEP-13` 决策 3「域可见写」判据 **(a) ∧ (b)**(判据 (b) 已于 2026-10-22 补齐并**成立**,per [`答复回执 §1.1`](./cep-interface-alignment-response-2026-10-22.md)),而 4 值 `perm` 无法区分静默/显式升级;**该需求命中 `ADR-CEP-05 §7`(α 失效判据 2)已写下的触发条件** |
 
 ### 5.1 附带提交:对 CEP 框架的需求(R-1 ~ R-12)
 
@@ -323,7 +325,7 @@ Ruby-SLICC 族(`MESI_Two_Level` / `MOESI_hammer` / `GPU_VIPER` / …,共 8 实�
 
 | 优先级 | 编号 | 摘要 |
 |:------:|------|------|
-| **P0** | **R-2** | `perm` 加「可静默升级」判别位(命中 `ADR-CEP-05 §10` 已写下的触发条件) |
+| **P0** | **R-2** | `perm` 加「可静默升级」判别位(命中 `ADR-CEP-05 §7` 已写下的触发条件;判据 (b) 已于 2026-10-22 补齐 → **R-2 命中**,per [`答复回执 §1.1`](./cep-interface-alignment-response-2026-10-22.md)) |
 | **P0** | **R-5'** | fabric config 提供**网络命名空间 + 每网络 `vc_count`**(`vc_binding` 逐网络化的直接前提;C-4 双向映射依赖此项) |
 | **P0** | **R-5''** | `ordering_assumption` 从 per-network 单值升为 **per-(network, vc_id)**(与 R-6' 捆绑;否则两个 map 的 key space 不一致) |
 | **P0** | **R-6'** | 消息类词表定为 **6 类**(`request`/`response`/`snoop`/`snoop_resp`/`atomic`/`query`;排除 `CATEGORY_CREDIT` 流控类别、`forward_data` 流 6、`snoop_completion_ack` 流 10)+ `vc_binding`/`ordering_assumption` 加 **network 维度**(**schema 修订**,delta 见 `32 号 §6.4`) |

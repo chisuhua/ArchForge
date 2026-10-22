@@ -51,7 +51,7 @@ SoC 内的 MOESI/GPU 6×6 与 NSA 侧的 Hardware Directory **不是两套东西
 | **C4** | 提问单 §3-Q4 的前提（「ArchForge 侧当前没有 VC/ordering 概念」）**不成立** —— `noc_bundles_tlm.hh:38` 已有 `vc_id` 0-3（与 CEP schema 同域）, NSA 已占 VC1=Atomic / VC2=Remote Query | §2-F5 |
 | **C5** | ArchForge `CoherenceDomain` 同时承担「本地 cache line 状态」与「全局 sharer 跟踪」两职 —— 这正是 CEP 的 Stub Cache / Sharer Tracker 边界所禁止的 | [§8.1](#81-coherencedomain--拆分) |
 | **C6** | `CoherenceProtocol::translate(probe, from, to)` 是**双协议感知**接口，与 CEP ADR-CEP-13 决策 3（桥接靠「一致性模型翻译 + proxy-cache」，两侧插件各自处理自己的请求）**不兼容** | [§10 Q2](#q2-coherenceprotocol-抽象基类的归属仓) |
-| **C7** | ArchForge 的 `E + Write → M`（`state_transition[2][1]=3`）是**静默升级**，在跨域组合下会破坏全局 SWMR —— 直接命中 CEP `ADR-CEP-05 §10` 已经写下的「重新评估 (β) 独立接口方案」触发条件 | [§11 R-2](#r-2-perm-需要可静默升级判别位) |
+| **C7** | ArchForge 的 `E + Write → M`（`state_transition[2][1]=3`）是**静默升级**，在跨域组合下会破坏全局 SWMR —— 直接命中 CEP `ADR-CEP-05 §7`（α 失效判据 2）已经写下的「重新评估 (β) 独立接口方案」触发条件；**判据 (b) 已于 2026-10-22 补齐并成立**（per [§5.2.1](#521-moesi_gpu-的-e--m-的判据评估a--b2026-10-22-补齐)） | [§11 R-2](#r-2-perm-需要可静默升级判别位) |
 
 ### 1.3 6 问速览
 
@@ -276,9 +276,43 @@ CEP 的 6 层模型（`07 号 §2.1-2.2`）恰好把两套体系放进**同一�
 
 > 请求 `r` 是**域可见写** ⟺ (a) 终态 `s1` 允许 store 命中且**无需外部通信**（可能转到 `s2`）**且** (b) `s1`/`s2` 接受导致**数据值响应**的转发请求。
 
-**对本仓的直接后果**：`moesi_gpu` 的 `state_transition[2][1] = 3`（**E + Write → M**）满足判据 (a)（E 态本地写命中无需外部通信），
-因此它**是一个域可见写** → 跨 D-GPU / D-FABRIC 边界时**必须触发跨域传播**。
-但 CEP 的 4 值 `perm` 无法表达「这是静默升级」→ **R-2**。
+#### 5.2.1 `moesi_gpu` 的 `E → M` 的判据评估（(a) ∧ (b)，2026-10-22 补齐）
+
+> **本小节是对本节原有结论的论证补全** —— 原文本只评估了 (a) 就下了「域可见写」的结论，**推理链缺 (b) 一环**。
+> 结论方向**不变**（`E → M` 仍是域可见写），但论证链现在闭合。
+> 逐条答复见 [`答复回执 §1.1`](../roadmap/cep-interface-alignment-response-2026-10-22.md)。
+
+**判据 (a)** ✓：`E` 是**唯一副本且干净** → store 直接就地命中并升级为 `M`，**不发出任何外部通信**。
+
+**判据 (b)**：判据是**析取**（`s1` **或** `s2`）—— 代入 `s1 = E`（store 命中时的状态）、`s2 = M`（静默升级后的状态）：
+
+| 状态 | 接受「导致**数据值响应**的转发请求」？ | 依据（本仓文档级语义） |
+|------|--------------------------------------|------|
+| `E` | **否** —— 干净独占态；snoop 响应是 `ACK`，**不带数据**（数据由内存提供） | `microarchitecture/coherence-protocol.md:255-263`（`handle_probe` 的 `case CoherenceState::E` → `SnoopResp::ACK`）；`:219` / `:221`（E + snoop(READ_SHARED / INVALIDATE) → `S` / `I`，**无 data 转发**） |
+| `M` | **是** —— 脏独占态；snoop 响应是 `DATA_AND_ACK`，**携带数据值** | `microarchitecture/coherence-protocol.md:265-275`（`case CoherenceState::M` → `DATA_AND_ACK`，`:269` / `:272`）；`:224` / `:226`（M + snoop(READ_SHARED) → `O`，**data 转发**；M + snoop(INVALIDATE) → `I`，**data 写回**） |
+
+→ `s2 = M` 成立 ⇒ 判据 (b) **整体成立** ⇒ **(a) ∧ (b) 成立** ⇒ `E → M` **是域可见写** → 跨 D-GPU / D-FABRIC 边界时**必须触发跨域传播**。
+但 CEP 的 4 值 `perm` 无法表达「这是静默升级」→ **R-2 命中**。
+
+**转发请求在 MOESI 下的具体形态**（canonical 流号 / 消息类 / 方向）：
+
+| 项 | 内容 |
+|----|------|
+| 转发请求 | **snoop**（canonical **流 3**，消息类 `snoop`），类型 `READ_SHARED` / `READ_EXCLUSIVE` / `INVALIDATE` |
+| 方向 | **center → node**（CoherentXBar / Sharer Tracker → 持有该行的 cache） |
+| 数据响应 | **snoop_resp**（canonical **流 4**，消息类 `snoop_resp`），响应类型 `DATA_AND_ACK`，**携带数据值** |
+| 方向 | **node → center** |
+| 数据承载 | canonical **流 6** `forward_data` —— 与 snoop **同槽**（`compute_noc` VC2 = `snoop` + `forward_data`，per [§6.0.2](#602-per-network-vc-分配矩阵权威)）；即「snoop 槽同时承载转发数据」 |
+
+**对跨域的机制链**：静默 `E → M` 之后，D-GPU 侧的 cache 处于 `M` 态 → 它**具备向其他域供给数据的能力**（`M` 的 snoop 响应带数据）→
+D-FABRIC 的一次读若经跨域桥接转发到该 cache，**必然读到新值**；而这条路径**没有任何跨域传播请求被发出**（静默升级对 center 不可见）→
+写因此**跨域可见而未被传播** → 4 值 `perm` 表达力不足 → **R-2 命中**。
+
+> **结论层级**：本评估落在**文档级**声明的 snoop 响应语义上（`moesi_gpu` 插件**尚无实现**）→ 属「**声明层已成立**」；
+> 实测确认依赖 CEP 侧 PoC 的 **S2** 场景（per [答复回执 §1.5](../roadmap/cep-interface-alignment-response-2026-10-22.md)）。
+>
+> **一条可复用的观察**：`E` 本身**不**满足 (b) —— 这与 RC 反例同形（valid / 干净态不提供数据）。
+> **是 `M` 态的「脏 + 可供给数据」属性让判据 (b) 成立** —— 即 (b) 落在**协议状态机的响应语义**上，不落在状态名的直觉上。
 
 ---
 
@@ -288,7 +322,7 @@ CEP 的 6 层模型（`07 号 §2.1-2.2`）恰好把两套体系放进**同一�
 > `status` 一律填 `planned` —— **CEP 侧只有 `implemented` 才计入 adapter 实例数**（`INV-CEP-12-IC3`）。
 > 两份声明均已通过 **JSON Schema 校验**（2026-10-21 实测）。
 > ⚠️ `protocol_version` 的取值受 `INV-CEP-11-IC1` 约束：**必须**落在 `ADR-CEP-11 §3` 锁定表内，否则装配期 fail ——
-> `moesi-gpu-1.0` / `mesif-1.0` **当前不在该表内**，需 CEP 侧增补（**R-13**）。
+> ✅ **R-13 已闭合**（2026-10-22）：`moesi-gpu-1.0` / `mesif-1.0` **已收录**进 `ADR-CEP-11 §3` 锁定表（CppTLM commit `da501fc9`）→ 本告警**解除**。
 
 ### 6.0 VC 分配权威矩阵（per-network）+ 消息类词表
 
@@ -314,6 +348,15 @@ CEP 的 6 层模型（`07 号 §2.1-2.2`）恰好把两套体系放进**同一�
 | **`CATEGORY_CREDIT`** | **流控类别**，非一致性消息类（`noc_bundles_tlm.hh:62` 注释即「Credit 信号专用类别」）；credit 随所在 VC 的流一起走，**不单独占槽** |
 | **`forward_data`（流 6）** | **不单列** —— 它是 `snoop` 槽（Forward 槽）的**承载实例**；对 stub 不可显式为接口（CEN-Ib6 不可分辨性） |
 | **`snoop_completion_ack`（流 10）** | **不单列** —— 它是 `snoop_resp` 槽（Reply 槽）的**承载实例**（CEN-Ib10：配对 `snoop_resp` 不配对 `completion`） |
+
+> **⚠️ 维度正交性（A14-C2 补注，2026-10-22）**：本节词表是**一致性层**（CEP 规范消息类）；
+> `CATEGORY_REQUEST` / `CATEGORY_RESPONSE` / `CATEGORY_CREDIT`（`CppTLM/include/bundles/noc_bundles_tlm.hh:60-62`）是**链路层 flit 类别**（传输层流控维度）。
+> **二者是两个正交维度**，不是同一张表的两个版本：
+> - `CATEGORY_*` 取值域恒为 **3 类**（**不扩**到 6 类）—— 扩类会与其**物理模型**矛盾（`CppTLM/include/tlm/cluster/soc_internal_noc.hh:10`：ARM CHI **4 通道** + **4 独立 VC**）；
+> - 它在 CEP 侧被当作 `vc_counts_[]` 的**桶下标**使用（`soc_internal_noc.hh:126-127`，`flit_category` 直接导出桶下标 + `(cat < VC_COUNT) ? cat : VC_SNP` 范围守卫，**索引对齐**）→ 与 VC 0-3 值域耦合 → 扩到 6 类会造成 **2 类错义 + 2 类静默折叠**（越界类别被折叠进 `VC_SNP`，无报错、无计数）；
+> - 6 类消息类 → `CATEGORY_*` 的映射由 **adapter 处的显式映射表**承担（**非恒等**），该映射表归 **CEP 侧 Stage 1** 交付（per CppTLM 回执 §8.4 A14-1 / A14-2 / A14-3）。
+>
+> 本仓其余引用 `CATEGORY_*` 的位置（[§6.1](#61-实例-1moesi_gpu) 的「另一处待修」、[§11 R-6'](#r-6-消息类词表定为-6-类--vc_binding--ordering_assumption-加-network-维度schema-修订)）均按此口径理解。
 
 > **为什么 `snoop_resp` 是一等消息类**：`CEN-Ib3`（snoop 必有 snoop_resp）+ `CEN-Ib4`（须含 `txn_id`）+ `CEN-Ib10`（ack 配对它）
 > 三条 invariant 都以它为对象；且它承担**协议插件内瞬态态收敛**职责（`INV-CEP-05-IC1` 的 `T` 态由它终结）。
@@ -910,7 +953,8 @@ CEP 的 `INV-CEP-05-IC1`（协议瞬态态与协议私有态住插件内）是�
 3. `O`/`M` 合并导致的信息损失**由 Sharer Tracker 补偿**（CEP 分层的既定做法），不构成额外成本。
 
 **并附 1 项 schema 请求**：`perm` 需能表达「可静默升级」（**R-2**）——
-`moesi_gpu` 的 `E + Write → M` 是静默升级，在跨域组合下是「域可见写」（`ADR-CEP-13` 决策 3 判据 (a)），
+`moesi_gpu` 的 `E + Write → M` 是静默升级，在跨域组合下是「域可见写」（`ADR-CEP-13` 决策 3 判据 **(a) ∧ (b)**；
+其中 (b) 的评估已于 2026-10-22 补齐并**成立**，per [§5.2.1](#521-moesi_gpu-的-e--m-的判据评估a--b2026-10-22-补齐)），
 4 值 `perm` 无法区分「静默升级」与「显式请求升级」。
 
 **落点与改动范围**：
@@ -941,10 +985,11 @@ CEP 的 `INV-CEP-05-IC1`（协议瞬态态与协议私有态住插件内）是�
 | 项 | 内容 |
 |----|------|
 | **需求** | `perm` 需能区分「静默 E→M 升级」与「显式请求升级」；或新增独立的 `perm_upgrade` 字段 |
-| **实证** | `docs/architecture/09-coherence-protocol.md:151`（`state_transition[2][1] = 3`，E + Write → M）；`docs/architecture/30-nsa-comprehensive-supplement.md §2.1`（GPU 侧 RC）；`ADR-CEP-13` 决策 3 判据 (a) |
-| **现状** | `protocol_instance.schema.json:77-83` 的 `perm` 是**纯枚举数组**；`ADR-CEP-05 §10`（`:223-225`）**已写明**「若组合协议需要区分静默/显式升级 → 重新评估 (β) 独立接口方案」—— **本需求命中该已写下的触发条件** |
-| **建议落点** | `protocol_instance.schema.json` 的 `perm`（改为对象数组 `[{value, silent_upgrade_to}]`）或新增顶层字段；`ADR-CEP-05 §10` 判据升级为「已触发」 |
+| **实证** | `docs/architecture/09-coherence-protocol.md:152`（E 行 → `state_transition[2][1] = 3`，E + Write → M；**注**：`:151` 是 S 行，非 E 行）；`docs/architecture/30-nsa-comprehensive-supplement.md §2.1`（GPU 侧 RC）；`ADR-CEP-13` 决策 3 判据 **(a) ∧ (b)** —— (b) 已于 2026-10-22 补齐并**成立**，per [§5.2.1](#521-moesi_gpu-的-e--m-的判据评估a--b2026-10-22-补齐) |
+| **现状** | `protocol_instance.schema.json:77-83` 的 `perm` 是**纯枚举数组**；`ADR-CEP-05 §7`（α 失效判据 2，**注**：判据 2 在 **§7**，非 §10 —— §10 是「关联 ADR / OpenSpec」）**已写明**「若组合协议需要区分静默/显式升级 → 重新评估 (β) 独立接口方案」—— **本需求命中该已写下的触发条件** |
+| **建议落点** | `protocol_instance.schema.json` 的 `perm`（改为对象数组 `[{value, silent_upgrade_to}]`）或新增顶层字段；判据 2 的**状态**由 **CEP 侧**记入 `ADR-CEP-05 §13 Status Update`（per Q-3c 裁决，本仓**不**复制该状态值） |
 | **优先级** | **P0**（直接命中 ADR-CEP-05 已写下的触发条件；且不解决则 D-CPU↔D-GPU 跨域正确性无法论证） |
+| **状态（2026-10-22）** | 🔶 **论证闭合** —— 判据 (b) 已评估通过 → **R-2 命中** `ADR-CEP-05 §7` 判据 2；**落 schema 仍待 CEP 侧**（本仓无代码仓，只出规约） |
 
 ### R-3. `consistency_labels` 需要支持「按 fabric scope 分级」
 
@@ -1007,6 +1052,7 @@ CEP 的 `INV-CEP-05-IC1`（协议瞬态态与协议私有态住插件内）是�
 | **现状** | 词表口径不一致（`32 号 §6.1` 声明用了 6 类，而原 R-6 只写 5 类）；schema 两字段均扁平 |
 | **建议落点** | `protocol_instance.schema.json`（两个字段的 `additionalProperties` 各嵌一层）+ `ADR-CEP-12` 决策 5 / 决策 6 修订 + `INV-CEP-12-IC2` 按 §6.4.2 重写 |
 | **CppTLM 侧附带项** | `noc_bundles_tlm.hh:60-62` 的 `CATEGORY_*` 需从 3 类扩到覆盖 6 类一致性消息类（**注**：`CATEGORY_*` 是 **flit 类别**（链路层），与 `vc_binding` 的**消息类**（一致性层）是两个正交维度 —— 建议 CEP 侧明确二者关系，避免又一次「词表混层」） |
+| **附带项的答复（2026-10-22）** | ✅ **确认 `CATEGORY_*` 不扩**（3 类不变）—— 与 CppTLM 回执 §8.4（A14-1 ~ A14-4）**结论一致**；正交性口径已补注于 [§6.0.1](#601-消息类词表cep-规范消息类6-类)（A14-C2）。本行保留原文，作为「本仓曾提出该附带项」的记录 |
 | **优先级** | **P0**（N-2 的直接落点；不修订则 C-4 不可机器验收） |
 
 ### R-7. CEP 侧需文档化「目录式远端查询」的流组合规范
@@ -1094,10 +1140,10 @@ CEP 的 `INV-CEP-05-IC1`（协议瞬态态与协议私有态住插件内）是�
 | D-3 | 4 类 Bundle ↔ canonical 10 流 映射表 | 本仓文档 §7 | C-2 / P0-3 | ✅ 本文完成 |
 | D-4 | 6→4 投影表 + 语义损失说明 | 本仓文档 §7.2 | C-2 / Q6 | ✅ 本文完成 |
 | D-5 | 协议实例声明（`moesi_gpu` / `mesif`） | 本仓文档 §6（JSON） | C-4 | ✅ 本文完成 |
-| D-6 | 一致性域声明（3 域 + 桥接粒度 + 域可见写判据） | 本仓文档 §5 | C-2 | ✅ 本文完成 |
+| D-6 | 一致性域声明（3 域 + 桥接粒度 + 域可见写判据） | 本仓文档 §5 | C-2 | ✅ 已完成（判据 (b) 已于 2026-10-22 补齐，见 §5.2.1） |
 | D-7 | **per-network** VC 分配矩阵（每网络 4 VC × 6 消息类）+ network 命名空间 + `vc_count` | 本仓文档 §6.0.2 + `22-nsa §0.5` 扩展 | C-4 / R-5' / R-5'' / R-6' | ✅ 矩阵已交付（§6.0.2）；network 清单待补 |
 | D-8 | 架构决策记录 | [`ADR-SOC-25`](../adr/ADR-SOC-25-cep-aligned-coherence-architecture.md) | C-1 | ✅ 已出 |
-| D-9 | `09-coherence-protocol.md` 的文档层返工（8 处） | 文档修订 | C-2 | 🔶 待执行 |
+| D-9 | `09-coherence-protocol.md` 的文档层返工（8 处） | 文档修订 | C-2 | 🔶 **批 2 排期 2026-11-05**（单批原子提交 + 锚点位移对照表随 commit 提供；批 1 = `ac956b8` 已落地） |
 | D-10 | R-1 ~ R-13 需求单 | 本仓文档 §11 | — | ✅ 本文完成 |
 
 ---
@@ -1107,7 +1153,7 @@ CEP 的 `INV-CEP-05-IC1`（协议瞬态态与协议私有态住插件内）是�
 | # | 风险 | 等级 | 缓解 |
 |---|------|:----:|------|
 | **RK-1** | **放行判据 C-1 结构上不可闭合**（ArchForge 无代码仓，产不出「接口 PR」） | 🔴 高 | **优先与 CppTLM 侧协商**把 C-1 改为「接口规约 PR」（F8）；这是本轮唯一的**治理级**阻塞，优先于一切技术结论 |
-| **RK-2** | R-2（`perm` 静默升级）不被 CEP 采纳 → D-CPU↔D-GPU 跨域正确性无法论证 | 🟡 中 | ArchForge 侧按 `ADR-CEP-13` 决策 3 判据**自行论证**并写入 D-6 声明；CEP 侧缺席时以「声明 + 实验证伪」模式兜底（per `ADR-CEP-06 §3` `verification_mode`） |
+| **RK-2** | R-2（`perm` 静默升级）不被 CEP 采纳 → D-CPU↔D-GPU 跨域正确性无法论证 | 🟡 中 | ✅ **判据 (b) 已于 2026-10-22 补齐并成立**（[§5.2.1](#521-moesi_gpu-的-e--m-的判据评估a--b2026-10-22-补齐)）→ R-2 **命中** `ADR-CEP-05 §7` 判据 2；剩余风险收敛为「CEP 侧是否落 schema」；CEP 侧缺席时仍以「声明 + 实验证伪」模式兜底（per `ADR-CEP-06 §3` `verification_mode`，实验载体 = CEP 侧 PoC **S2**） |
 | **RK-3** | R-1（分级目录）不被采纳 → D-FABRIC 域无法建模，NSA Stage 2/3 阻塞 | 🟡 中 | 降级方案：先用 `TreeManager`（scope=SUBTREE）近似三级目录，把「多级聚合」作为 ArchForge 侧扩展标签承载 |
 | **RK-4** | 提问单 §2 的实现状态误判导致 CEP 侧按「已实现」排期 → 双方预期错位 | 🟡 中 | 本文档 §2 的「文档断言 / 代码实证 / 判定」三列表可作为后续所有跨仓断言的**取证模板** |
 | **RK-5** | 文档返工（D-9）触碰 8 处 09 号引用 → 与其他文档的引用一致性破裂 | 🟢 低 | 返工时同步更新 `docs/microarchitecture/coherence-*.md` 与 `docs/architecture/INDEX.md`；改完跑一次全仓 `file:line` 引用检查 |
@@ -1119,6 +1165,7 @@ CEP 的 `INV-CEP-05-IC1`（协议瞬态态与协议私有态住插件内）是�
 
 | 日期 | 版本 | 作者 | 修订 |
 |------|------|------|------|
+| 2026-10-22 | v0.2 | ArchForge (coherence owner) | **应答 CppTLM「待回应清单」10 条**（[`答复回执`](../roadmap/cep-interface-alignment-response-2026-10-22.md)）：<br>① **§5.2.1 新增** `moesi_gpu` 的 `E → M` 的 **(a) ∧ (b) 完整评估** —— (b) **成立**（`s2 = M` 的 snoop 响应带数据值）→ **R-2 命中** `ADR-CEP-05 §7` 判据 2；同时补全原文本「只评估 (a) 就下结论」的推理缺环（结论方向不变）；<br>② **§6 头部** R-13 告警**解除**（`moesi-gpu-1.0` / `mesif-1.0` 已收录进 `ADR-CEP-11 §3`，CppTLM `da501fc9`）；<br>③ **§6.0.1 补注** `CATEGORY_*` 与一致性消息类的**维度正交性**（A14-C2）；<br>④ **§11 R-2** 实证锚点 `09:151` → **`09:152`**（E 行；`:151` 是 S 行）+ 判据表述 (a) → (a)∧(b) + 状态行「论证闭合」；<br>⑤ **全篇** `ADR-CEP-05 §10` → **`§7`**（判据 2 在 §7「α 失效判据」，§10 是「关联 ADR / OpenSpec」）；<br>⑥ §12 D-6 / D-9、§13 RK-2 状态同步；<br>⑦ **维护记录 + 下次更新** 随本轮答复更新（原「待 CppTLM 侧逐条答复后升 v0.2」的前提已兑现）。 |
 | 2026-10-21 | v0.1 | ArchForge (coherence owner) | 首版：CEP 提问单审阅（8 项发现）+ 体系 A/B 收敛诊断 + CEP 分层映射 + 3 域重划 + 2 个协议实例声明 + P0-3 映射表 + 6 问答复 + R-1~R-12 需求单 |
 
-**下次更新**：待 CppTLM 侧对 R-1 ~ R-13 逐条答复后升 v0.2（补「CEP 侧回执」列）
+**下次更新**：待 **D-9 批 2**（`09-coherence-protocol.md` 8 处返工，计划 2026-11-05）落地后同步 §5.2.1 / §7.2 的锚点 + 补 §11 的「CEP 侧回执」列。
