@@ -12,8 +12,8 @@
 > **关联模块**: [`command-processor.md`](./command-processor.md) · [L3 子系统架构](../architecture/02-command-processor.md)
 >
 > **关联调研**(per Phase F-B.4 M2):
-> - [`docs/research/CP/amd/overview.md`](../../research/CP/amd/overview.md):AMD CP 全链路 + 6 专利族
-> - [`docs/research/CP/nvidia/overview.md`](../../research/CP/nvidia/overview.md):NVIDIA pushbuffer/Front End/TMU/WDU + 7 专利族
+> - [`docs/research/CP/amd/overview.md`](../research/CP/amd/overview.md):AMD CP 全链路 + 6 专利族
+> - [`docs/research/CP/nvidia/overview.md`](../research/CP/nvidia/overview.md):NVIDIA pushbuffer/Front End/TMU/WDU + 7 专利族
 > - **UsrLinuxEmu 端 GPFIFO+PM4 嵌入式先例**:`plugins/gpu_driver/sim/scheduler/translator/gpfifo_translator.cpp:103 parsePm4Packet` 已实现 "GPFIFO 外壳 + `payload[0]`=PM4 header"— **本 MVP 路径 3 与此先例字节级对齐**
 > **首版 commit**: 🔵 W5-6 实施 · **最近更新**: 2027-02-09 (v1.0 dGPU SoC 战略补充)
 > **维护者**: CppTLM Team (Sisyphus)

@@ -18,9 +18,9 @@
 > - PM4 解析: [`pm4-decoder.md`](./pm4-decoder.md)
 > - **L3 子系统架构**: [`docs/architecture/02-command-processor.md`](../architecture/02-command-processor.md) — L3 双 vendor 详细设计
 > - TMU Glue: [`tmu-dispatch-processor.md`](./tmu-dispatch-processor.md)
-> - AMD PM4 调研: [`docs/research/CP/`](../../research/CP/) (12 专利)
->   - [`docs/research/CP/amd/overview.md`](../../research/CP/amd/overview.md):AMD CP/IB/doorbell/HQD/SPI 全链路 + 6 专利族 + 与 NVIDIA 对照
->   - [`docs/research/CP/nvidia/overview.md`](../../research/CP/nvidia/overview.md):NVIDIA pushbuffer/Front End/TMU/WDU + 7 专利族
+> - AMD PM4 调研: [`docs/research/CP/`](../research/CP/) (12 专利)
+>   - [`docs/research/CP/amd/overview.md`](../research/CP/amd/overview.md):AMD CP/IB/doorbell/HQD/SPI 全链路 + 6 专利族 + 与 NVIDIA 对照
+>   - [`docs/research/CP/nvidia/overview.md`](../research/CP/nvidia/overview.md):NVIDIA pushbuffer/Front End/TMU/WDU + 7 专利族
 > - **UsrLinuxEmu 端 GPFIFO 先例**:`plugins/gpu_driver/sim/scheduler/translator/gpfifo_translator.cpp:103 parsePm4Packet` 已实现 "GPFIFO 外壳 + `payload[0]`=PM4 header" 嵌入式— **本 MVP 路径 3 与此先例字节级对齐**(per Phase F-B.4 M2)
 
 ---

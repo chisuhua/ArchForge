@@ -13,8 +13,8 @@
 > - [`docs/microarchitecture/interconnect-arbiter.md`](../microarchitecture/interconnect-arbiter.md)
 > - [`docs/microarchitecture/interconnect-bridge.md`](../microarchitecture/interconnect-bridge.md)
 > **关联研究综述**:
-> - [`docs/research/gem5-soc-survey.md`](../../research/gem5-soc-survey.md)（gem5 Garnet NoC 合成流量 + 配置示例）
-> - [`docs/research/US20240356866A1_交叉开关动态目的选择_解析.md`](../../research/US20240356866A1_交叉开关动态目的选择_解析.md)（DDS Crossbar 用于 NoC）
+> - 【CppTLM 仓】`docs/research/gem5-soc-survey.md`（gem5 Garnet NoC 合成流量 + 配置示例）
+> - [`docs/research/US20240356866A1_交叉开关动态目的选择_解析.md`](../research/US20240356866A1_交叉开关动态目的选择_解析.md)（DDS Crossbar 用于 NoC）
 > **关联 ADR**: ADR-SOC-09（v1.0 NVIDIA+AMD dual vendor）/ ADR-SOC-10（v1.0 ModuleFactory 拓扑层）
 
 ---
@@ -509,8 +509,8 @@ public:
 
 | 综述 | 关联内容 |
 |------|---------|
-| [`docs/research/gem5-soc-survey.md`](../../research/gem5-soc-survey.md) | Gem5 Garnet NoC 合成流量 + ruby_mem_test |
-| [`docs/research/US20240356866A1_交叉开关动态目的选择_解析.md`](../../research/US20240356866A1_交叉开关动态目的选择_解析.md) | DDS Crossbar 思想(用于 L5)|
+| 【CppTLM 仓】`docs/research/gem5-soc-survey.md` | Gem5 Garnet NoC 合成流量 + ruby_mem_test |
+| [`docs/research/US20240356866A1_交叉开关动态目的选择_解析.md`](../research/US20240356866A1_交叉开关动态目的选择_解析.md) | DDS Crossbar 思想(用于 L5)|
 
 ---
 

@@ -1,11 +1,11 @@
 # Architecture 文档索引
 
-> **版本**: v3.1 (2026-10-21 新增 32 号 CEP 对齐一致性架构) · **范围**: `docs/architecture/` 全部 45 份文档
+> **版本**: v3.2 (2026-10-27 新增 33 号 SM 操作数供给设计目标；`docs/research/` 自 CppTLM 迁入) · **范围**: `docs/architecture/` 全部 46 份文档
 > **关联总览**: [`../README.md`](../README.md) · **关联决策**: [`../ADR-INDEX.md`](../ADR-INDEX.md)
 
 ---
 
-## 1. 文档分组（8 大类，45 份）
+## 1. 文档分组（8 大类，46 份）
 
 | 组 | 编号 | 主题 | 份数 | 性质 |
 |----|------|------|:----:|------|
@@ -54,7 +54,7 @@
 
 > **注**：00-overview.md 采用 L1..L7 命名；本目录 01-10 对应 L1..L10（含 NoC/Coherence/Completion 单独成层）。两组命名差异见 §6 命名约定。
 
-### C. CDNA + SM 重构 + 审计（5 份）
+### C. CDNA + SM 重构 + 审计（6 份）
 
 | 序号 | 文件 | 主题 | 状态 |
 |:----:|------|------|:----:|
@@ -63,6 +63,7 @@
 | [13](./13-cdna-emu-selector.md) | `13-cdna-emu-selector.md` | **CDNA-EMU 后端实现方案选型建议**（阶段 C 启动前决策依据） | 📋 Proposed |
 | [14](./14-stage-a-architecture-audit.md) | `14-stage-a-architecture-audit.md` | **CDNA 演进 change 架构溯源**（是否采用 CppTLM 模块搭建 + Bundle 连接） | — |
 | [15](./15-sm-microarchitecture-design.md) | `15-sm-microarchitecture-design.md` | **dGPU SoC v1.0 SM 微架构重构设计**（反转 ADR-SOC-02 黑盒） | 📋 Proposed |
+| [33](./33-sm-operand-supply-design-target.md) | `33-sm-operand-supply-design-target.md` | **SM 操作数供给下一代架构设计目标（OSF）**——MCOS 多消费者操作数槽 / ERW 弹性读窗口 / WABR 宽度自适应读 / SOP 推测供给；证据见 [`research/SM/`](../research/SM/overview.md) + [`research/SM/CudaCore/SYNTHESIS.md`](../research/SM/CudaCore/SYNTHESIS.md) | 🟡 设计目标声明 v0.3（未经评审） |
 
 ### D. PCIe 子链路（4 份）
 

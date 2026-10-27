@@ -51,7 +51,7 @@ Phase 7 APU SoC 需要 CPU 与 GPU 共享 `CoherenceDomain` 与 `CacheTLM` 层�
 
 ## 5. 参考文献
 
-- 调研: [`docs/research-cpptlm-gpu-fused-soc-survey.md`](../../research-cpptlm-gpu-fused-soc-survey.md) §3 D1（L602-615）
+- 调研: 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md` §3 D1（L602-615）
 - 复述: [`roadmap.md`](../../../roadmap.md) L63 D1 行
 - 微架构: [`docs/microarchitecture/coherence-protocol.md`](../microarchitecture/coherence-protocol.md), [`coherence-bridge.md`](../microarchitecture/coherence-bridge.md)
 - SoC 集成: [`docs/specs/apu-soc-design.md`](../specs/apu-soc-design.md)

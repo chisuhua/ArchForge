@@ -9,7 +9,7 @@
 
 > **关联文档**:
 > - 索引: [README.md](./README.md)
-> - 调研: [`docs/research-cpptlm-gpu-fused-soc-survey.md`](../../research-cpptlm-gpu-fused-soc-survey.md) §2.6
+> - 调研: 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md` §2.6
 > - 邻接: [coherence-protocol.md](./coherence-protocol.md) (协议抽象层) | [interconnect-bridge.md](./interconnect-bridge.md) (链路桥接) | [coherence-domain.md](./coherence-domain.md) (✅ 基础设施已实施)
 > - **L7 Coherence 子系统架构**: [`docs/architecture/09-coherence-protocol.md`](../architecture/09-coherence-protocol.md) §6 CoherenceBridge
 > - **关联 ADR**:

@@ -3,7 +3,7 @@
 > **生成时间**: 2026-06-11
 > **用途**: 梳理项目内已实现 + 正准备开发的 SoC 模块，按模块类型分组
 > **关联文档**:
-> - 调研报告：[`docs/research-cpptlm-gpu-fused-soc-survey.md`](../../research-cpptlm-gpu-fused-soc-survey.md)
+> - 调研报告：【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md`
 > - Roadmap Phase 7：[`roadmap.md`](../../../roadmap.md) §Phase 7
 > - Phase 7.A spec：[`docs/superpowers/specs/2026-06-11-phase7a-gpu-infra-design.md`](../../superpowers/specs/2026-06-11-phase7a-gpu-infra-design.md)
 > - Phase 7.A plan：[`docs/superpowers/plans/2026-06-11-phase7a-gpu-infra.md`](../../superpowers/plans/2026-06-11-phase7a-gpu-infra.md)

@@ -10,7 +10,7 @@
 
 > **关联文档**:
 > - 索引: [README.md](./README.md)
-> - 调研: [`docs/research-cpptlm-gpu-fused-soc-survey.md`](../../research-cpptlm-gpu-fused-soc-survey.md) §2.5
+> - 调研: 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md` §2.5
 > - 邻接: [io-dma.md](./io-dma.md) | [io-pci.md](./io-pci.md) | [coherence-bridge.md](./coherence-bridge.md) (CPU↔dGPU 桥接)
 
 ---

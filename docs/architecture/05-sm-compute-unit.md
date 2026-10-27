@@ -10,9 +10,12 @@
 > - [`docs/microarchitecture/cuda-core-adapter.md`](../microarchitecture/cuda-core-adapter.md)（v0.5 MVP,深度集成 PTX-EMU）
 > - [`docs/microarchitecture/gpu-gputlm.md`](../microarchitecture/gpu-gputlm.md)
 > **关联研究综述**:
-> - [`docs/research/SM/overview.md`](../../research/SM/overview.md)（NVIDIA Hopper→Blackwell SM 综述,10 专利 + 4 论文 + 1 官方简报）
-> - [`docs/research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md`](../../research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md)（Blackwell 官方简报解析）
-> - [`docs/research/WDUtoSM/overview.md`](../../research/WDUtoSM/overview.md)
+> - [`docs/research/SM/overview.md`](../research/SM/overview.md)（NVIDIA Hopper→Blackwell SM 综述,10 专利 + 4 论文 + 1 官方简报）
+> - [`docs/research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md`](../research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md)（Blackwell 官方简报解析）
+> - [`docs/research/WDUtoSM/overview.md`](../research/WDUtoSM/overview.md)
+> - [`docs/research/SM/CudaCore/overview.md`](../research/SM/CudaCore/overview.md)（**Operand Collector 专题**：NVIDIA SM 操作数供给级 —— bank 划分 / 端口 / 复用缓存 / 冲突处理）
+> - [`docs/research/SM/CudaCore/SYNTHESIS.md`](../research/SM/CudaCore/SYNTHESIS.md)（**寄存器架构演进总结**：7 世代表 + 3 不变式 + 4 条遗留问题）
+> - [`architecture/33-sm-operand-supply-design-target.md`](./33-sm-operand-supply-design-target.md)（**下一代操作数供给设计目标 OSF** 🟡 未经评审）
 > **关联 ADR**: ADR-SOC-02（CU 黑盒/白盒）/ ADR-SOC-06 D2/D5（CU 蓝图 + 深度集成 PTX-EMU）/ ADR-SOC-09 D1（共享 CU 蓝图 + 双 vendor）
 
 ---
@@ -610,16 +613,16 @@
 
 | 综述 | 关联内容 |
 |------|---------|
-| [`docs/research/SM/overview.md`](../../research/SM/overview.md) | NVIDIA Hopper→Blackwell SM 综述 |
-| [`docs/research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md`](../../research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md) | Blackwell 官方简报 |
-| [`docs/research/SM/CudaCore/US20230289211A1_线程组可扩展负载均衡_解析.md`](../../research/SM/CudaCore/US20230289211A1_线程组可扩展负载均衡_解析.md) | CWD/CGA 准入 |
-| [`docs/research/SM/TMA/US20230289304A1_TMA多维数据异步访问_解析.md`](../../research/SM/TMA/US20230289304A1_TMA多维数据异步访问_解析.md) | TMAU 核心 |
-| [`docs/research/SM/TMA/US12020035B2_TMA可编程多播_解析.md`](../../research/SM/TMA/US12020035B2_TMA可编程多播_解析.md) | TMA 多播 |
-| [`docs/research/SM/TMA/US20230289242A1_mbarrier异步事务同步_解析.md`](../../research/SM/TMA/US20230289242A1_mbarrier异步事务同步_解析.md) | mbarrier SYNCS |
-| [`docs/research/SM/TMA/US20250173152A1_分布式共享内存_解析.md`](../../research/SM/TMA/US20250173152A1_分布式共享内存_解析.md) | DSMEM |
-| [`docs/research/SM/Tensor/US20230289398A1_wgmma组矩阵乘加_解析.md`](../../research/SM/Tensor/US20230289398A1_wgmma组矩阵乘加_解析.md) | wgmma |
-| [`docs/research/SM/CudaCore/arXiv2512.02189_Blackwell微基准深入_解析.md`](../../research/SM/CudaCore/arXiv2512.02189_Blackwell微基准深入_解析.md) | TMEM/tcgen05 实测 |
-| [`docs/research/WDUtoSM/overview.md`](../../research/WDUtoSM/overview.md) | NVIDIA WDU + AMD SPI/SQ |
+| [`docs/research/SM/overview.md`](../research/SM/overview.md) | NVIDIA Hopper→Blackwell SM 综述 |
+| [`docs/research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md`](../research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md) | Blackwell 官方简报 |
+| [`docs/research/SM/CudaCore/US20230289211A1_线程组可扩展负载均衡_解析.md`](../research/SM/CudaCore/US20230289211A1_线程组可扩展负载均衡_解析.md) | CWD/CGA 准入 |
+| [`docs/research/SM/TMA/US20230289304A1_TMA多维数据异步访问_解析.md`](../research/SM/TMA/US20230289304A1_TMA多维数据异步访问_解析.md) | TMAU 核心 |
+| [`docs/research/SM/TMA/US12020035B2_TMA可编程多播_解析.md`](../research/SM/TMA/US12020035B2_TMA可编程多播_解析.md) | TMA 多播 |
+| [`docs/research/SM/TMA/US20230289242A1_mbarrier异步事务同步_解析.md`](../research/SM/TMA/US20230289242A1_mbarrier异步事务同步_解析.md) | mbarrier SYNCS |
+| [`docs/research/SM/TMA/US20250173152A1_分布式共享内存_解析.md`](../research/SM/TMA/US20250173152A1_分布式共享内存_解析.md) | DSMEM |
+| [`docs/research/SM/Tensor/US20230289398A1_wgmma组矩阵乘加_解析.md`](../research/SM/Tensor/US20230289398A1_wgmma组矩阵乘加_解析.md) | wgmma |
+| [`docs/research/SM/CudaCore/arXiv2512.02189_Blackwell微基准深入_解析.md`](../research/SM/CudaCore/arXiv2512.02189_Blackwell微基准深入_解析.md) | TMEM/tcgen05 实测 |
+| [`docs/research/WDUtoSM/overview.md`](../research/WDUtoSM/overview.md) | NVIDIA WDU + AMD SPI/SQ |
 
 ---
 

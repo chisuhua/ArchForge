@@ -10,7 +10,7 @@
 
 > **关联文档**:
 > - 索引: [README.md](./README.md)
-> - 调研: [`docs/research-cpptlm-gpu-fused-soc-survey.md`](../../research-cpptlm-gpu-fused-soc-survey.md) §2.4
+> - 调研: 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md` §2.4
 > - Spec: [`docs/superpowers/specs/2026-06-11-phase7a-gpu-infra-design.md`](../../superpowers/specs/2026-06-11-phase7a-gpu-infra-design.md) §8（GPU 内部互联关键模板）
 > - Plan: [`docs/superpowers/plans/2026-06-11-phase7a-gpu-infra.md`](../../superpowers/plans/2026-06-11-phase7a-gpu-infra.md) §8（Phase 7.E 蓝图）
 > - **L8 NoC Interconnect 子系统架构**: [`docs/architecture/08-noc-interconnect.md`](../architecture/08-noc-interconnect.md) §3-4

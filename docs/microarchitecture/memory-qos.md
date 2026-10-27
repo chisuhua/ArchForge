@@ -10,7 +10,7 @@
 
 > **关联文档**:
 > - 索引: [README.md](./README.md)
-> - 调研: [`docs/research-cpptlm-gpu-fused-soc-survey.md`](../../research-cpptlm-gpu-fused-soc-survey.md) §2.2
+> - 调研: 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md` §2.2
 > - 邻接: [memory-dram.md](./memory-dram.md) (DRAMCtrl) | [memory-hbm.md](./memory-hbm.md) (HBM) | [memory-simple.md](./memory-simple.md) | [memory-memtlm.md](./memory-memtlm.md) (v0)
 
 ---

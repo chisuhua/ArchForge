@@ -15,10 +15,10 @@
 > - **ADR-SOC-08**（v5.5+ 系统级硬件仿真集成的前置测试契约）
 > **关联 OpenSpec**: [`2027-02-09-cpptlm-dgpu-soc-v1-architecture/`](../../../openspec/changes/2027-02-09-cpptlm-dgpu-soc-v1-architecture/proposal.md)
 > **关联研究综述**:
-> - [`docs/research/WDUtoSM/overview.md`](../../research/WDUtoSM/overview.md)（NVIDIA WDU + AMD SPI/SQ）
-> - [`docs/research/CP/nvidia/overview.md`](../../research/CP/nvidia/overview.md)
-> - [`docs/research/CP/amd/overview.md`](../../research/CP/amd/overview.md)
-> - [`docs/research/SM/overview.md`](../../research/SM/overview.md)
+> - [`docs/research/WDUtoSM/overview.md`](../research/WDUtoSM/overview.md)（NVIDIA WDU + AMD SPI/SQ）
+> - [`docs/research/CP/nvidia/overview.md`](../research/CP/nvidia/overview.md)
+> - [`docs/research/CP/amd/overview.md`](../research/CP/amd/overview.md)
+> - [`docs/research/SM/overview.md`](../research/SM/overview.md)
 
 ---
 
@@ -231,10 +231,10 @@ public:
 
 | 综述 | 关联 |
 |------|------|
-| [`docs/research/WDUtoSM/overview.md`](../../research/WDUtoSM/overview.md) | NVIDIA WDU + AMD SPI/SQ |
-| [`docs/research/CP/nvidia/overview.md`](../../research/CP/nvidia/overview.md) | NVIDIA CP/SM queue manager |
-| [`docs/research/CP/amd/overview.md`](../../research/CP/amd/overview.md) | AMD HQD/IB/doorbell |
-| [`docs/research/SM/overview.md`](../../research/SM/overview.md) | NVIDIA Hopper/Blackwell SM |
+| [`docs/research/WDUtoSM/overview.md`](../research/WDUtoSM/overview.md) | NVIDIA WDU + AMD SPI/SQ |
+| [`docs/research/CP/nvidia/overview.md`](../research/CP/nvidia/overview.md) | NVIDIA CP/SM queue manager |
+| [`docs/research/CP/amd/overview.md`](../research/CP/amd/overview.md) | AMD HQD/IB/doorbell |
+| [`docs/research/SM/overview.md`](../research/SM/overview.md) | NVIDIA Hopper/Blackwell SM |
 
 ### 6.4 关联 UsrLinuxEmu ADR
 

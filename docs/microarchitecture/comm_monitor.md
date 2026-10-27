@@ -10,7 +10,7 @@
 
 > **关联文档**:
 > - 索引: [README.md](./README.md)
-> - 调研: [`docs/research-cpptlm-gpu-fused-soc-survey.md`](../../research-cpptlm-gpu-fused-soc-survey.md) §2.4
+> - 调研: 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md` §2.4
 > - 邻接: [interconnect-crossbar.md](./interconnect-crossbar.md) (v0 crossbar)
 
 ---

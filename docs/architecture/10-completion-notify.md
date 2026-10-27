@@ -10,8 +10,8 @@
 > - [`docs/architecture/19-pcie-ip-microarchitecture.md §4 (MSI-X)`](../microarchitecture/msix_table_mvp.md)
 > - [`docs/architecture/19-pcie-ip-microarchitecture.md §4 (PCIe Config Space)`](../microarchitecture/pcie_config_space_mvp.md)（MSI-X 状态机）
 > **关联研究综述**:
-> - [`docs/research/PCIe/PCIe_上的保序write.md`](../../research/PCIe/PCIe_上的保序write.md)（PCIe 强序 write 机制）
-> - [`docs/research/CP/amd/US20210191730A1_未映射队列聚合门铃_解析.md`](../../research/CP/amd/US20210191730A1_未映射队列聚合门铃_解析.md)（AMD 聚合 doorbell）
+> - [`docs/research/PCIe/PCIe_上的保序write.md`](../research/PCIe/PCIe_上的保序write.md)（PCIe 强序 write 机制）
+> - [`docs/research/CP/amd/US20210191730A1_未映射队列聚合门铃_解析.md`](../research/CP/amd/US20210191730A1_未映射队列聚合门铃_解析.md)（AMD 聚合 doorbell）
 > **关联 ADR**: ADR-SOC-08 P1（MSI-X mask/unmask/PBA 状态机）/ ADR-SOC-06 D5（UsrLinuxEmu IOCTL 0x27/0x29/0x01）
 
 ---
@@ -393,8 +393,8 @@ public:
 
 | 综述 | 关联内容 |
 |------|---------|
-| [`docs/research/PCIe/PCIe_上的保序write.md`](../../research/PCIe/PCIe_上的保序write.md) | PCIe 强序 write + MMU ordering pipe + Gen5 250-700ns |
-| [`docs/research/CP/amd/US20210191730A1_未映射队列聚合门铃_解析.md`](../../research/CP/amd/US20210191730A1_未映射队列聚合门铃_解析.md) | AMD 聚合 doorbell |
+| [`docs/research/PCIe/PCIe_上的保序write.md`](../research/PCIe/PCIe_上的保序write.md) | PCIe 强序 write + MMU ordering pipe + Gen5 250-700ns |
+| [`docs/research/CP/amd/US20210191730A1_未映射队列聚合门铃_解析.md`](../research/CP/amd/US20210191730A1_未映射队列聚合门铃_解析.md) | AMD 聚合 doorbell |
 
 ### 10.4 关联 OpenSpec changes
 

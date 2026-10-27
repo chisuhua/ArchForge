@@ -9,6 +9,7 @@
 > - [`architecture/11-cdna-real-isa-integration.md`](./11-cdna-real-isa-integration.md) — CDNA 真实 ISA 集成设计（双轨前端 + 统一 Timing 宿主）
 > - [`architecture/13-cdna-emu-selector.md`](./13-cdna-emu-selector.md) — 选型建议（自研 155 条 + LLVM MC 混合）
 > - [`architecture/14-stage-a-architecture-audit.md`](./14-stage-a-architecture-audit.md) — 阶段 A 架构溯源（指出现状用 Coordinator-injected 模式）
+> - [`architecture/33-sm-operand-supply-design-target.md`](./33-sm-operand-supply-design-target.md) — **SM 操作数供给下一代设计目标（OSF）** 🟡 设计目标声明；配套证据见 [`research/SM/CudaCore/SYNTHESIS.md`](../research/SM/CudaCore/SYNTHESIS.md)
 > **参考业界**:
 > - [NVIDIA Blackwell SM_120 Cycle-Level Study](https://zartbot.github.io/micro_arch/nvidia/sm_120/paper.html#sec5) — 5+V-pipe 架构 + Scoreboard ≥ 12 + 128-bit 指令编码 17-bit 控制码
 > - AMD MI300X CDNA3 Architecture Reference (Whitepaper)

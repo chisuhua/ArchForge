@@ -11,7 +11,7 @@
 
 > **关联文档**:
 > - 索引: [README.md](./README.md)
-> - 调研: [`docs/research-cpptlm-gpu-fused-soc-survey.md`](../../research-cpptlm-gpu-fused-soc-survey.md) §2.4, §4 Phase 2 备选
+> - 调研: 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md` §2.4, §4 Phase 2 备选
 > - 通用 GPU 概念: [gpu.common.md](./gpu.common.md)
 
 ---

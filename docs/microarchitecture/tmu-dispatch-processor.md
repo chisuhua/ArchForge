@@ -12,7 +12,7 @@
 > **首版 commit**: 🔵 W5-6 实施 · **最近更新**: 2027-02-09 (v1.0 dGPU SoC 战略补充)
 > **维护者**: CppTLM Team (Sisyphus)
 
-> **关联调研**: [`docs/research/TMU/`](../../research/TMU/) (16 文件,US20230236878A1 Hopper WSDU + Kepler TMU + Volta/Ampere TMU/WDU)
+> **关联调研**: [`docs/research/TMU/`](../research/TMU/) (16 文件,US20230236878A1 Hopper WSDU + Kepler TMU + Volta/Ampere TMU/WDU)
 
 ---
 

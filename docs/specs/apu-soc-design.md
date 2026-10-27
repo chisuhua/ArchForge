@@ -6,7 +6,7 @@
 > **Status**: 🔄 Draft（待用户 review）
 > **Author**: 整合自 Phase 7 调研报告 + Phase 7.A 实施 spec
 > **Parent Roadmap**: [`roadmap.md`](../../roadmap.md) §Phase 7
-> **调研参考**: [`docs/research-cpptlm-gpu-fused-soc-survey.md`](../research-cpptlm-gpu-fused-soc-survey.md)
+> **调研参考**: 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md`
 > **实施 spec**（位于 [`docs/superpowers/specs/`](../superpowers/specs/)）:
 > - **APU 整体实施 spec**: [`2026-06-12-phase7-apu-fused-soc-design.md`](../superpowers/specs/2026-06-12-phase7-apu-fused-soc-design.md) — 包含 6 阶段代码 + 验收 + 文件清单 + LOC 估算
 > - Phase 7.A 实施 spec: [`2026-06-11-phase7a-gpu-infra-design.md`](../superpowers/specs/2026-06-11-phase7a-gpu-infra-design.md)
@@ -23,7 +23,7 @@
 
 | 源文档 | 范围 | 在本文档的角色 |
 |--------|------|---------------|
-| [调研报告](../research-cpptlm-gpu-fused-soc-survey.md) | 6 阶段全景 + 决策 D1–D5 + gem5 蓝本 | §2 系统拓扑 + §4 设计决策 + §5 关键架构模式 |
+| 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md` | 6 阶段全景 + 决策 D1–D5 + gem5 蓝本 | §2 系统拓扑 + §4 设计决策 + §5 关键架构模式 |
 | [Phase 7.A 实施 spec](../superpowers/specs/2026-06-11-phase7a-gpu-infra-design.md) | Phase 7.A 详细实施（代码 + 验收） | §3 阶段递进 7.A 节点引用 + §10 关联文档 |
 
 **本文档结构**:
@@ -517,7 +517,7 @@ Memory (HBM)
 
 ## 4. 关键设计决策 D1–D5
 
-> **来源**: [调研报告](../research-cpptlm-gpu-fused-soc-survey.md) §3 + 用户 2026-06-11 决策
+> **来源**: 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md` §3 + 用户 2026-06-11 决策
 
 ### 4.1 D1 协议策略（分步走）
 
@@ -990,7 +990,7 @@ Phase 7.C (MOESI)  ──[5+ 回归]──►  Phase 7.B (write-through)  ──
 
 ### 10.1 源文档
 
-- [调研报告](../research-cpptlm-gpu-fused-soc-survey.md) — gem5 蓝本 6 阶段全景
+- 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md` — gem5 蓝本 6 阶段全景
 - [Phase 7.A 实施 spec](../superpowers/specs/2026-06-11-phase7a-gpu-infra-design.md) — Phase 7.A 代码级实施细节
 - [Phase 7.A 实施 plan](../superpowers/plans/2026-06-11-phase7a-gpu-infra.md) — Phase 7.A 任务分解
 - [Roadmap Phase 7](../../roadmap.md) — 路线图
@@ -1028,7 +1028,7 @@ Phase 7.C (MOESI)  ──[5+ 回归]──►  Phase 7.B (write-through)  ──
 
 ## 11. 修订历史
 
-- **2026-06-11**: 调研报告初版（[`docs/research-cpptlm-gpu-fused-soc-survey.md`](../research-cpptlm-gpu-fused-soc-survey.md)） — gem5 蓝本 6 阶段全景
+- **2026-06-11**: 调研报告初版（【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md`） — gem5 蓝本 6 阶段全景
 - **2026-06-11**: Phase 7.A 实施 spec 初版（[`docs/superpowers/specs/2026-06-11-phase7a-gpu-infra-design.md`](../superpowers/specs/2026-06-11-phase7a-gpu-infra-design.md)） — Phase 7.A 代码级实施
 - **2026-06-11**: Phase 7.A 实施 plan 初版（[`docs/superpowers/plans/2026-06-11-phase7a-gpu-infra.md`](../superpowers/plans/2026-06-11-phase7a-gpu-infra.md)） — Phase 7.A 任务分解
 - **2026-06-11**: Phase 7.A 实施 6 commits — GPUTLM v0 上线
@@ -1048,7 +1048,7 @@ Phase 7.C (MOESI)  ──[5+ 回归]──►  Phase 7.B (write-through)  ──
 ---
 
 **关联文档清单**:
-- 调研报告: [`docs/research-cpptlm-gpu-fused-soc-survey.md`](../research-cpptlm-gpu-fused-soc-survey.md)
+- 调研报告: 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md`
 - Phase 7.A 实施 spec: [`docs/superpowers/specs/2026-06-11-phase7a-gpu-infra-design.md`](../superpowers/specs/2026-06-11-phase7a-gpu-infra-design.md)
 - Phase 7.A 实施 plan: [`docs/superpowers/plans/2026-06-11-phase7a-gpu-infra.md`](../superpowers/plans/2026-06-11-phase7a-gpu-infra.md)
 - 微架构文档索引: [`docs/microarchitecture/`](../microarchitecture/)

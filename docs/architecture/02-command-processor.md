@@ -9,8 +9,8 @@
 > - [`docs/microarchitecture/command-processor.md`](../microarchitecture/command-processor.md)（ADR-SOC-06 D5 v0.5 MVP 路径）
 > - [`docs/microarchitecture/pm4-decoder.md`](../microarchitecture/pm4-decoder.md)（NVIDIA method packet 简化）
 > **关联研究综述**:
-> - [`docs/research/CP/nvidia/overview.md`](../../research/CP/nvidia/overview.md)（NVIDIA CP 专利综述:SM 队列管理器 + 计算图 + 可执行图修改）
-> - [`docs/research/CP/amd/overview.md`](../../research/CP/amd/overview.md)（AMD CP 专利综述:HQD + IB prefetch + 用户态分发）
+> - [`docs/research/CP/nvidia/overview.md`](../research/CP/nvidia/overview.md)（NVIDIA CP 专利综述:SM 队列管理器 + 计算图 + 可执行图修改）
+> - [`docs/research/CP/amd/overview.md`](../research/CP/amd/overview.md)（AMD CP 专利综述:HQD + IB prefetch + 用户态分发）
 > **关联 ADR**: ADR-SOC-04（HSAPP 极简化）/ ADR-SOC-06 D5（CommandProcessor + Pm4Decoder + 双 vendor 扩展）/ ADR-SOC-09（Proposed,v1.0 NVIDIA+AMD dual vendor）
 
 ---
@@ -530,12 +530,12 @@ private:
 
 | 综述 | 关联内容 |
 |------|---------|
-| [`docs/research/CP/nvidia/overview.md`](../../research/CP/nvidia/overview.md) | NVIDIA CP 专利综述(SM 队列管理器 + 计算图) |
-| [`docs/research/CP/amd/overview.md`](../../research/CP/amd/overview.md) | AMD CP 专利综述(HQD + IB prefetch + 用户态分发) |
-| [`docs/research/US10489056B2_SM系统队列管理器_解析.md`](../../research/CP/nvidia/US10489056B2_SM系统队列管理器_解析.md) | SM 级 queue manager QM 718 |
-| [`docs/research/US8310492B2_HQD硬件队列调度_解析.md`](../../research/CP/amd/US8310492B2_HQD硬件队列调度_解析.md) | AMD HQD 模型 |
-| [`docs/research/US20210191730A1_未映射队列聚合门铃_解析.md`](../../research/CP/amd/US20210191730A1_未映射队列聚合门铃_解析.md) | AMD 聚合 doorbell |
-| [`docs/research/US9176795B2_用户态图形处理分发_解析.md`](../../research/CP/amd/US9176795B2_用户态图形处理分发_解析.md) | AMD 用户态 KFD 分发 |
+| [`docs/research/CP/nvidia/overview.md`](../research/CP/nvidia/overview.md) | NVIDIA CP 专利综述(SM 队列管理器 + 计算图) |
+| [`docs/research/CP/amd/overview.md`](../research/CP/amd/overview.md) | AMD CP 专利综述(HQD + IB prefetch + 用户态分发) |
+| [`docs/research/US10489056B2_SM系统队列管理器_解析.md`](../research/CP/nvidia/US10489056B2_SM系统队列管理器_解析.md) | SM 级 queue manager QM 718 |
+| [`docs/research/US8310492B2_HQD硬件队列调度_解析.md`](../research/CP/amd/US8310492B2_HQD硬件队列调度_解析.md) | AMD HQD 模型 |
+| [`docs/research/US20210191730A1_未映射队列聚合门铃_解析.md`](../research/CP/amd/US20210191730A1_未映射队列聚合门铃_解析.md) | AMD 聚合 doorbell |
+| [`docs/research/US9176795B2_用户态图形处理分发_解析.md`](../research/CP/amd/US9176795B2_用户态图形处理分发_解析.md) | AMD 用户态 KFD 分发 |
 
 ---
 

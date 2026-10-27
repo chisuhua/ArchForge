@@ -62,7 +62,7 @@ void ComputeUnitTLM::tick() {
 
 ## 5. 参考文献
 
-- 调研: [`docs/research-cpptlm-gpu-fused-soc-survey.md`](../../research-cpptlm-gpu-fused-soc-survey.md) §3 D2（L617-624）
+- 调研: 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md` §3 D2（L617-624）
 - 复述: [`roadmap.md`](../../../roadmap.md) L64 D2 行
 - 微架构: [`docs/microarchitecture/gpu-compute_unit.md`](../microarchitecture/gpu-compute_unit.md), [`gpu-gputlm.md`](../microarchitecture/gpu-gputlm.md)
 - SoC 集成: [`docs/specs/apu-soc-design.md`](../specs/apu-soc-design.md)

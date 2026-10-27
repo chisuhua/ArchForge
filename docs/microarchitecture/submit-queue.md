@@ -13,7 +13,7 @@
 > **首版 commit**: 🔵 W3-4 实施 · **最近更新**: 2027-02-09 (v1.0 dGPU SoC 战略补充)
 > **维护者**: CppTLM Team (Sisyphus)
 
-> **关联调研**: [`docs/research/WDUtoSM/overview.md`](../../research/WDUtoSM/overview.md)(NVIDIA WDU + Work Distribution Crossbar + 12 专利族)、[`docs/research/WDUtoSM/nvidia/US8112614B2_...md`](../../research/WDUtoSM/nvidia/US8112614B2_协作线程阵列并行数据处理_解析.md)(CTA 奠基)
+> **关联调研**: [`docs/research/WDUtoSM/overview.md`](../research/WDUtoSM/overview.md)(NVIDIA WDU + Work Distribution Crossbar + 12 专利族)、[`docs/research/WDUtoSM/nvidia/US8112614B2_...md`](../research/WDUtoSM/nvidia/US8112614B2_协作线程阵列并行数据处理_解析.md)(CTA 奠基)
 
 ---
 

@@ -8,9 +8,9 @@
 > - 系统级设计 [`docs/specs/apu-soc-design.md`](../specs/apu-soc-design.md)（1056 行,Phase 7 APU 视角）
 > - PCIe EP 微架构 [`docs/architecture/19-pcie-ip-microarchitecture.md`](../architecture/19-pcie-ip-microarchitecture.md)（950 行,PCIe IP 视角）
 > - 9 类 SimModule 拓扑 [`include/tlm/cluster/`](../../../include/tlm/cluster/)（CpuCluster / ComputeCluster / TpcCluster / GpcCluster / GpuCluster / CacheCluster / MemoryCluster / GpuNoC / ApuSoC）
-> - 研究综述 [`docs/research/SM/overview.md`](../../research/SM/overview.md)（NVIDIA Hopper→Blackwell SM 内部专利与微基准综述）
-> - 分发段综述 [`docs/research/WDUtoSM/overview.md`](../../research/WDUtoSM/overview.md)（NVIDIA WDU + AMD SPI/SQ 对照）
-> - gem5 标准库与 AMD MI300 dGPU 综述 [`docs/research/gem5-soc-survey.md`](../../research/gem5-soc-survey.md)
+> - 研究综述 [`docs/research/SM/overview.md`](../research/SM/overview.md)（NVIDIA Hopper→Blackwell SM 内部专利与微基准综述）
+> - 分发段综述 [`docs/research/WDUtoSM/overview.md`](../research/WDUtoSM/overview.md)（NVIDIA WDU + AMD SPI/SQ 对照）
+> - gem5 标准库与 AMD MI300 dGPU 综述（**CppTLM 仓** `docs/research/gem5-soc-survey.md` —— 该文件是 CppTLM `docs/architecture/06-*`/`07-*` 与 `ADR-CEP-00/17` 的判据证据锚点，故留 CppTLM；本仓不重复维护）
 > - **本版本修复 Oracle 评审 2027-02-09 暴露的 P0/P1 问题**: A1 端口表 / A2 OpenSpec 引用 / A3 层数统一 / A4 范围矩阵 / B1 R7 23 ABI 状态 / B2 PDL 错误 / B3 硬件规格 / B4 MI300X 拓扑 / B5 ADR 决策编号
 
 ---

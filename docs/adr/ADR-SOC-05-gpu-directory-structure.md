@@ -65,7 +65,7 @@ REGISTER_CHSTREAM(TCC_TLM, ComputeReqBundle, ComputeRespBundle)         // 7.D
 
 ## 5. 参考文献
 
-- 调研: [`docs/research-cpptlm-gpu-fused-soc-survey.md`](../../research-cpptlm-gpu-fused-soc-survey.md) §3 D5（L657-677）
+- 调研: 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md` §3 D5（L657-677）
 - 复述: [`roadmap.md`](../../../roadmap.md) L67 D5 行
 - 落地: [`AGENTS.md`](../../../AGENTS.md) L19 STRUCTURE 节（已含 `include/tlm/gpu/`）
 - SoC 集成: [`docs/specs/apu-soc-design.md`](../specs/apu-soc-design.md)

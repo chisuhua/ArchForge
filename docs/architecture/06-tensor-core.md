@@ -9,9 +9,9 @@
 > - [`docs/microarchitecture/cuda-core-adapter.md`](../microarchitecture/cuda-core-adapter.md)（v0.5 MVP Tensor Core 集成）
 > - [`docs/microarchitecture/gpu-compute_unit.md`](../microarchitecture/gpu-compute_unit.md)
 > **关联研究综述**:
-> - [`docs/research/SM/overview.md`](../../research/SM/overview.md)（wgmma/tcgen05/TMA/mbarrier/DSMEM）
-> - [`docs/research/SM/Tensor/US20230289398A1_wgmma组矩阵乘加_解析.md`](../../research/SM/Tensor/US20230289398A1_wgmma组矩阵乘加_解析.md)
-> - [`docs/research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md`](../../research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md)
+> - [`docs/research/SM/overview.md`](../research/SM/overview.md)（wgmma/tcgen05/TMA/mbarrier/DSMEM）
+> - [`docs/research/SM/Tensor/US20230289398A1_wgmma组矩阵乘加_解析.md`](../research/SM/Tensor/US20230289398A1_wgmma组矩阵乘加_解析.md)
+> - [`docs/research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md`](../research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md)
 > **关联 ADR**: 00-overview D7（Tensor Core 渐进）/ ADR-SOC-09（CU 双 vendor 蓝图 Tensor Core 路径）
 
 ---
@@ -422,11 +422,11 @@ public:
 
 | 综述 | 关联内容 |
 |------|---------|
-| [`docs/research/SM/overview.md`](../../research/SM/overview.md) | NVIDIA Hopper→Blackwell SM 综述(wgmma + tcgen05 + TMEM) |
-| [`docs/research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md`](../../research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md) | Blackwell 官方简报 + Transformer Engine |
-| [`docs/research/SM/Tensor/US20230289398A1_wgmma组矩阵乘加_解析.md`](../../research/SM/Tensor/US20230289398A1_wgmma组矩阵乘加_解析.md) | wgmma 4 warps×32 + worker thread |
-| [`docs/research/SM/CudaCore/arXiv2512.02189_Blackwell微基准深入_解析.md`](../../research/SM/CudaCore/arXiv2512.02189_Blackwell微基准深入_解析.md) | TMEM + tcgen05 实测 |
-| [`docs/research/SM/CudaCore/arXiv2507.10789_Blackwell微基准剖析_解析.md`](../../research/SM/CudaCore/arXiv2507.10789_Blackwell微基准剖析_解析.md) | RTX 5080 消费级 |
+| [`docs/research/SM/overview.md`](../research/SM/overview.md) | NVIDIA Hopper→Blackwell SM 综述(wgmma + tcgen05 + TMEM) |
+| [`docs/research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md`](../research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md) | Blackwell 官方简报 + Transformer Engine |
+| [`docs/research/SM/Tensor/US20230289398A1_wgmma组矩阵乘加_解析.md`](../research/SM/Tensor/US20230289398A1_wgmma组矩阵乘加_解析.md) | wgmma 4 warps×32 + worker thread |
+| [`docs/research/SM/CudaCore/arXiv2512.02189_Blackwell微基准深入_解析.md`](../research/SM/CudaCore/arXiv2512.02189_Blackwell微基准深入_解析.md) | TMEM + tcgen05 实测 |
+| [`docs/research/SM/CudaCore/arXiv2507.10789_Blackwell微基准剖析_解析.md`](../research/SM/CudaCore/arXiv2507.10789_Blackwell微基准剖析_解析.md) | RTX 5080 消费级 |
 
 ---
 

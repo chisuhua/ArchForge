@@ -58,7 +58,7 @@ class ComputeUnitTLM {
 
 ## 5. 参考文献
 
-- 调研: [`docs/research-cpptlm-gpu-fused-soc-survey.md`](../../research-cpptlm-gpu-fused-soc-survey.md) §3 D3（L626-633）
+- 调研: 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md` §3 D3（L626-633）
 - 复述: [`roadmap.md`](../../../roadmap.md) L65 D3 行
 - 微架构: [`docs/microarchitecture/gpu-compute_unit.md`](../microarchitecture/gpu-compute_unit.md)
 - 关联: [ADR-SOC-02 CU 粒度](./ADR-SOC-02-cu-granularity.md)（CU 黑盒与 wavefront 抽象是组合策略）

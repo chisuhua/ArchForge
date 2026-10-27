@@ -193,7 +193,7 @@ public:
 
 | 综述 | 关联内容 |
 |------|---------|
-| [`docs/research/SM/overview.md`](../../research/SM/overview.md) | NVIDIA Hopper/Blackwell SM 内部（含 PCIe/SR-IOV 视角） |
+| [`docs/research/SM/overview.md`](../research/SM/overview.md) | NVIDIA Hopper/Blackwell SM 内部（含 PCIe/SR-IOV 视角） |
 
 ---
 

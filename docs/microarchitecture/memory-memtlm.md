@@ -10,7 +10,7 @@
 
 > **关联文档**:
 > - 索引: [README.md](./README.md)
-> - 调研: [`docs/research-cpptlm-gpu-fused-soc-survey.md`](../../research-cpptlm-gpu-fused-soc-survey.md) §2.2
+> - 调研: 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md` §2.2
 > - Phase 7.D: [`roadmap.md`](../../../roadmap.md) §Phase 7.D (hbm_mode 扩展)
 > - **L7 Memory 子系统架构**: [`docs/architecture/07-memory-system.md`](../architecture/07-memory-system.md) §3 HBM3e + §4 L2
 > - **关联 ADR**:

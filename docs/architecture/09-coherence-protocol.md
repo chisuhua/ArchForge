@@ -15,7 +15,7 @@
 > - [`docs/microarchitecture/cache-replacement.md`](../microarchitecture/cache-replacement.md)
 > - [`docs/microarchitecture/cache.common.md`](../microarchitecture/cache.common.md)
 > **关联研究综述**:
-> - [`docs/research/gem5-soc-survey.md`](../../research/gem5-soc-survey.md)（Ruby MSI + MOESI Hammer 随机测试）
+> - 【CppTLM 仓】`docs/research/gem5-soc-survey.md`（Ruby MSI + MOESI Hammer 随机测试）
 > **关联 ADR**: ADR-SOC-01（Coherence 协议分步走策略）/ 00-overview D8（v1.0 Coherence 完整实施）
 
 ---
@@ -490,7 +490,7 @@ public:
 
 | 综述 | 关联内容 |
 |------|---------|
-| [`docs/research/gem5-soc-survey.md`](../../research/gem5-soc-survey.md) | Gem5 Ruby MSI + MOESI Hammer 随机测试 |
+| 【CppTLM 仓】`docs/research/gem5-soc-survey.md` | Gem5 Ruby MSI + MOESI Hammer 随机测试 |
 
 ---
 

@@ -9,9 +9,9 @@
 > - [`docs/microarchitecture/submit-queue.md`](../microarchitecture/submit-queue.md)（v0.5 MVP 单 SM 简化路由）
 > - [`docs/microarchitecture/tmu-dispatch-processor.md`](../microarchitecture/tmu-dispatch-processor.md)
 > **关联研究综述**:
-> - [`docs/research/WDUtoSM/overview.md`](../../research/WDUtoSM/overview.md)（NVIDIA WDU + AMD SPI/SQ 综述 12 件专利）
-> - [`docs/research/US20240356866A1_交叉开关动态目的选择_解析.md`](../../research/US20240356866A1_交叉开关动态目的选择_解析.md)（DDS Crossbar）
-> - [`docs/research/US12333311B2_协作群组阵列_解析.md`](../../research/US12333311B2_协作群组阵列_解析.md)（CGA Cluster）
+> - [`docs/research/WDUtoSM/overview.md`](../research/WDUtoSM/overview.md)（NVIDIA WDU + AMD SPI/SQ 综述 12 件专利）
+> - [`docs/research/US20240356866A1_交叉开关动态目的选择_解析.md`](../research/US20240356866A1_交叉开关动态目的选择_解析.md)（DDS Crossbar）
+> - [`docs/research/US12333311B2_协作群组阵列_解析.md`](../research/US12333311B2_协作群组阵列_解析.md)（CGA Cluster）
 > **关联 ADR**: ADR-SOC-06 D5（SubmitQueue + WDU）/ ADR-SOC-09 D2（L5 WDU→SM 双 vendor）
 
 ---
@@ -522,15 +522,15 @@ public:
 
 | 综述 | 关联内容 |
 |------|---------|
-| [`docs/research/WDUtoSM/overview.md`](../../research/WDUtoSM/overview.md) | NVIDIA WDU + AMD SPI/SQ 综述 12 件专利 |
-| [`docs/research/US20240356866A1_交叉开关动态目的选择_解析.md`](../../research/US20240356866A1_交叉开关动态目的选择_解析.md) | DDS Crossbar |
-| [`docs/research/US12333311B2_协作群组阵列_解析.md`](../../research/US12333311B2_协作群组阵列_解析.md) | CGA Cluster |
-| [`docs/research/US20240036952A1_线程块调度策略_解析.md`](../../research/US20240036952A1_线程块调度策略_解析.md) | block cluster 调度策略 API |
-| [`docs/research/US10579388B2_着色器核心资源分配策略_解析.md`](../../research/WDUtoSM/amd/US10579388B2_着色器核心资源分配策略_解析.md) | AMD SPI 两级仲裁 |
-| [`docs/research/EP3785113B1_反馈引导工作组拆分分发_解析.md`](../../research/WDUtoSM/amd/EP3785113B1_反馈引导工作组拆分分发_解析.md) | split workgroup |
-| [`docs/research/US9135077B2_波前重组计算优化_解析.md`](../../research/WDUtoSM/amd/US9135077B2_波前重组计算优化_解析.md) | Wavefront 重组 |
-| [`docs/research/EP3803583B1_多内核波前调度器_解析.md`](../../research/WDUtoSM/amd/EP3803583B1_多内核波前调度器_解析.md) | 多内核波前调度器 |
-| [`docs/research/US20230206382A1_动态工作组分发_解析.md`](../../research/WDUtoSM/amd/US20230206382A1_动态工作组分发_解析.md) | SE 级策略 |
+| [`docs/research/WDUtoSM/overview.md`](../research/WDUtoSM/overview.md) | NVIDIA WDU + AMD SPI/SQ 综述 12 件专利 |
+| [`docs/research/US20240356866A1_交叉开关动态目的选择_解析.md`](../research/US20240356866A1_交叉开关动态目的选择_解析.md) | DDS Crossbar |
+| [`docs/research/US12333311B2_协作群组阵列_解析.md`](../research/US12333311B2_协作群组阵列_解析.md) | CGA Cluster |
+| [`docs/research/US20240036952A1_线程块调度策略_解析.md`](../research/US20240036952A1_线程块调度策略_解析.md) | block cluster 调度策略 API |
+| [`docs/research/US10579388B2_着色器核心资源分配策略_解析.md`](../research/WDUtoSM/amd/US10579388B2_着色器核心资源分配策略_解析.md) | AMD SPI 两级仲裁 |
+| [`docs/research/EP3785113B1_反馈引导工作组拆分分发_解析.md`](../research/WDUtoSM/amd/EP3785113B1_反馈引导工作组拆分分发_解析.md) | split workgroup |
+| [`docs/research/US9135077B2_波前重组计算优化_解析.md`](../research/WDUtoSM/amd/US9135077B2_波前重组计算优化_解析.md) | Wavefront 重组 |
+| [`docs/research/EP3803583B1_多内核波前调度器_解析.md`](../research/WDUtoSM/amd/EP3803583B1_多内核波前调度器_解析.md) | 多内核波前调度器 |
+| [`docs/research/US20230206382A1_动态工作组分发_解析.md`](../research/WDUtoSM/amd/US20230206382A1_动态工作组分发_解析.md) | SE 级策略 |
 
 ---
 

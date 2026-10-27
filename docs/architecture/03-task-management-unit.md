@@ -9,8 +9,8 @@
 > - [`docs/microarchitecture/tmu-dispatch-processor.md`](../microarchitecture/tmu-dispatch-processor.md)（v0.5 MVP 简化）
 > - [`docs/microarchitecture/gpu-memory-cluster.md`](../microarchitecture/gpu-memory-cluster.md)（TMD 关联）
 > **关联研究综述**:
-> - [`docs/research/TMU/overview.md`](../../research/TMU/overview.md)（NVIDIA TMU 专利综述:8 件 + 3 代形态）
-> - [`docs/research/TMU/TMD.md`](../../research/TMU/TMD.md)（TMD 完整字段布局 7 区）
+> - [`docs/research/TMU/overview.md`](../research/TMU/overview.md)（NVIDIA TMU 专利综述:8 件 + 3 代形态）
+> - [`docs/research/TMU/TMD.md`](../research/TMU/TMD.md)（TMD 完整字段布局 7 区）
 > **关联 ADR**: ADR-SOC-06 D5（TMU 简化 MVP）/ ADR-SOC-09 D2(共享 L4 TMU/TMD)
 
 ---
@@ -473,14 +473,14 @@ Consumer 调度执行
 
 | 综述 | 关联内容 |
 |------|---------|
-| [`docs/research/TMU/overview.md`](../../research/TMU/overview.md) | NVIDIA TMU 专利综述(8 件 + 3 代形态) |
-| [`docs/research/TMU/TMD.md`](../../research/TMU/TMD.md) | TMD 完整字段布局 7 区 |
-| [`docs/research/TMU/TMU专利专题整理.md`](../../research/TMU/TMU专利专题整理.md) | 23 件专利族整理(3 代形态) |
-| [`docs/research/TMU/US11182207B2_依赖任务描述符预取_解析.md`](../../research/TMU/US11182207B2_依赖任务描述符预取_解析.md) | 依赖预取专利解析 |
-| [`docs/research/TMU/US20130198760A1_依赖任务自动启动_解析.md`](../../research/TMU/US20130198760A1_依赖任务自动启动_解析.md) | Dependent TMD auto-launch |
-| [`docs/research/TMU/US20230236878A1Efficiently_Launch_task_on_processor.md`](../../research/TMU/US20230236878A1Efficiently_Launch_task_on_processor.md) | WSDU/pre-exit(PDL 硬件基础) |
-| [`docs/research/TMU/US20210349763A1_嵌套并行计算_解析.md`](../../research/TMU/US20210349763A1_嵌套并行计算_解析.md) | CDP 嵌套并行 |
-| [`docs/research/TMU/US9928109B2_嵌套流事件处理_解析.md`](../../research/TMU/US9928109B2_嵌套流事件处理_解析.md) | 嵌套流事件 |
+| [`docs/research/TMU/overview.md`](../research/TMU/overview.md) | NVIDIA TMU 专利综述(8 件 + 3 代形态) |
+| [`docs/research/TMU/TMD.md`](../research/TMU/TMD.md) | TMD 完整字段布局 7 区 |
+| [`docs/research/TMU/TMU专利专题整理.md`](../research/TMU/TMU专利专题整理.md) | 23 件专利族整理(3 代形态) |
+| [`docs/research/TMU/US11182207B2_依赖任务描述符预取_解析.md`](../research/TMU/US11182207B2_依赖任务描述符预取_解析.md) | 依赖预取专利解析 |
+| [`docs/research/TMU/US20130198760A1_依赖任务自动启动_解析.md`](../research/TMU/US20130198760A1_依赖任务自动启动_解析.md) | Dependent TMD auto-launch |
+| [`docs/research/TMU/US20230236878A1Efficiently_Launch_task_on_processor.md`](../research/TMU/US20230236878A1Efficiently_Launch_task_on_processor.md) | WSDU/pre-exit(PDL 硬件基础) |
+| [`docs/research/TMU/US20210349763A1_嵌套并行计算_解析.md`](../research/TMU/US20210349763A1_嵌套并行计算_解析.md) | CDP 嵌套并行 |
+| [`docs/research/TMU/US9928109B2_嵌套流事件处理_解析.md`](../research/TMU/US9928109B2_嵌套流事件处理_解析.md) | 嵌套流事件 |
 
 ---
 

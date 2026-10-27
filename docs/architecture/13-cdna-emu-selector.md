@@ -6,9 +6,9 @@
 > **关联 ADR**: [`ADR-SOC-15-cdna-real-isa-roadmap.md`](../adr/ADR-SOC-15-cdna-real-isa-roadmap.md) §4.3 阶段 C（CDNA 引擎接入）
 > **关联设计**: [`architecture/11-cdna-real-isa-integration.md`](../architecture/11-cdna-real-isa-integration.md) §11.3 CDNA 微架构适配
 > **关联调研**:
-> - [`docs/research/2026-09-04-mgpusim-extraction-feasibility.md`](../../research/2026-09-04-mgpusim-extraction-feasibility.md)
-> - [`docs/research/2026-09-04-llvm-mc-gfx942-feasibility.md`](../../research/2026-09-04-llvm-mc-gfx942-feasibility.md)
-> - [`docs/research/2026-09-04-self-cdna3-emulator-feasibility.md`](../../research/2026-09-04-self-cdna3-emulator-feasibility.md)
+> - [`docs/research/2026-09-04-mgpusim-extraction-feasibility.md`](../research/2026-09-04-mgpusim-extraction-feasibility.md)
+> - [`docs/research/2026-09-04-llvm-mc-gfx942-feasibility.md`](../research/2026-09-04-llvm-mc-gfx942-feasibility.md)
+> - [`docs/research/2026-09-04-self-cdna3-emulator-feasibility.md`](../research/2026-09-04-self-cdna3-emulator-feasibility.md)
 > **目的**: 综合 3 个并行调研结论，给出 CDNA-EMU 后端实现的最终选型建议，供 Oracle 评审与阶段 C 启动决策。
 
 ---

@@ -9,7 +9,7 @@
 
 > **关联文档**:
 > - 索引: [README.md](./README.md)
-> - 调研: [`docs/research-cpptlm-gpu-fused-soc-survey.md`](../../research-cpptlm-gpu-fused-soc-survey.md) §2.4
+> - 调研: 【CppTLM 仓】`docs/research/research-cpptlm-gpu-fused-soc-survey.md` §2.4
 > - 邻接: [coherent_xbar.md](./coherent_xbar.md) (CoherentXBarTLM 调用方) | [cache-protocol.md](./cache-protocol.md) (MOESI 协议)
 > - **L7 Coherence 子系统架构**: [`docs/architecture/09-coherence-protocol.md`](../architecture/09-coherence-protocol.md) §7 SnoopFilter
 > - **关联 ADR**:

@@ -12,9 +12,9 @@
 > - [`docs/microarchitecture/memory-hbm.md`](../microarchitecture/memory-hbm.md)/[`memory-dram.md`](../microarchitecture/memory-dram.md)
 > - [`docs/microarchitecture/coherence-protocol.md`](../microarchitecture/coherence-protocol.md)/[`coherence-domain.md`](../microarchitecture/coherence-domain.md)/[`coherence-bridge.md`](../microarchitecture/coherence-bridge.md)/[`snoop_filter.md`](../microarchitecture/snoop_filter.md)
 > **关联研究综述**:
-> - [`docs/research/SM/overview.md`](../../research/SM/overview.md)（NVIDIA Hopper/Blackwell DSMEM/TMEM）
-> - [`docs/research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md`](../../research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md)
-> - [`docs/research/SM/CudaCore/arXiv2402.13499_Hopper微基准剖析_解析.md`](../../research/SM/CudaCore/arXiv2402.13499_Hopper微基准剖析_解析.md)
+> - [`docs/research/SM/overview.md`](../research/SM/overview.md)（NVIDIA Hopper/Blackwell DSMEM/TMEM）
+> - [`docs/research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md`](../research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md)
+> - [`docs/research/SM/CudaCore/arXiv2402.13499_Hopper微基准剖析_解析.md`](../research/SM/CudaCore/arXiv2402.13499_Hopper微基准剖析_解析.md)
 > **关联 ADR**: ADR-SOC-01（Coherence 协议策略）/ 00-overview D8（v1.0 Coherence 完整）
 
 ---
@@ -468,12 +468,12 @@ public:
 
 | 综述 | 关联内容 |
 |------|---------|
-| [`docs/research/SM/overview.md`](../../research/SM/overview.md) | NVIDIA Hopper/Blackwell DSMEM/TMEM |
-| [`docs/research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md`](../../research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md) | Blackwell 显存规格 |
-| [`docs/research/SM/CudaCore/arXiv2402.13499_Hopper微基准剖析_解析.md`](../../research/SM/CudaCore/arXiv2402.13499_Hopper微基准剖析_解析.md) | DSMEM 180 clocks SM-to-SM |
-| [`docs/research/SM/CudaCore/arXiv2512.02189_Blackwell微基准深入_解析.md`](../../research/SM/CudaCore/arXiv2512.02189_Blackwell微基准深入_解析.md) | TMEM 256KB/SM, 16 TB/s |
-| [`docs/research/SM/TMA/US20250173152A1_分布式共享内存_解析.md`](../../research/SM/TMA/US20250173152A1_分布式共享内存_解析.md) | DSMEM 专利 |
-| [`docs/research/gem5-soc-survey.md`](../../research/gem5-soc-survey.md) | gem5 Memory 集成(DRAMSim2, sc_main, hmc)|
+| [`docs/research/SM/overview.md`](../research/SM/overview.md) | NVIDIA Hopper/Blackwell DSMEM/TMEM |
+| [`docs/research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md`](../research/SM/NVIDIA_Blackwell_Architecture_Technical_Brief_v2.1_官方技术简报_解析.md) | Blackwell 显存规格 |
+| [`docs/research/SM/CudaCore/arXiv2402.13499_Hopper微基准剖析_解析.md`](../research/SM/CudaCore/arXiv2402.13499_Hopper微基准剖析_解析.md) | DSMEM 180 clocks SM-to-SM |
+| [`docs/research/SM/CudaCore/arXiv2512.02189_Blackwell微基准深入_解析.md`](../research/SM/CudaCore/arXiv2512.02189_Blackwell微基准深入_解析.md) | TMEM 256KB/SM, 16 TB/s |
+| [`docs/research/SM/TMA/US20250173152A1_分布式共享内存_解析.md`](../research/SM/TMA/US20250173152A1_分布式共享内存_解析.md) | DSMEM 专利 |
+| 【CppTLM 仓】`docs/research/gem5-soc-survey.md` | gem5 Memory 集成(DRAMSim2, sc_main, hmc)|
 
 ---
 
