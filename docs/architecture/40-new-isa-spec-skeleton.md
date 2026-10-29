@@ -8,6 +8,7 @@
 > - 本文只写**规范语句**（架构状态 / 字段位宽 / 必须成立的约束 / 必须留给编译器与硬件的责任边界）。
 > - **一切论证一律外移**：为什么这么设计 → [`36-…`](./36-new-isa-dependence-layer-design.md) / [`38-…`](./38-new-isa-dual-domain-structure.md)；微架构与 IPC → [`33-…`](./33-sm-operand-supply-design-target.md) / [`34-…`](./34-sm-operand-supply-ipc-timing-analysis.md)；编译器 → [`39-…`](./39-new-isa-compiler-backend.md)；范围与取代关系 → [`37-…`](./37-new-isa-design-charter.md)。
 > - **本文不重复任何上游文档的推理过程**。出现第二份推导 ⇒ 说明写错了位置。
+> **配套 ADR**: [`ADR-SOC-26`](../adr/ADR-SOC-26-self-authored-gpu-isa-as-sole-isa.md)（唯一 ISA）· [`ADR-SOC-27`](../adr/ADR-SOC-27-compiler-driven-dependence-management.md)（依赖层）· [`ADR-SOC-28`](../adr/ADR-SOC-28-late-addr-war-via-gap-stall.md)（WAR 机制）· [`ADR-SOC-29`](../adr/ADR-SOC-29-dual-domain-scalar-vector-structure.md)（双域）· [`ADR-SOC-30`](../adr/ADR-SOC-30-isa-encoding-48-64-variable-length.md)（编码）· [`ADR-SOC-31`](../adr/ADR-SOC-31-simt-execution-model-and-reconvergence.md)（执行模型）
 > **关联裁决**: 36 号 Q-1..Q-11（尤其 **Q-9** late-addr / **Q-10** 控制块按域裁剪 / **Q-11** WAR 用 **gap 内** `stall` 表达）· 37 号 Q-8 + C-7 · 38 号 X-D1..X-D5 + I-1/I-4
 > **关联 OpenSpec changes**: 无
 

@@ -1,6 +1,6 @@
 # ArchForge 决策体系索引（ADR 导览）
 
-> **版本**: v3.0 (2026-09-23 重整版) · **维护**: ArchForge Team
+> **版本**: v3.3 (2026-10-29 新增 ADR-SOC-26..31 自研 ISA 路线) · **维护**: ArchForge Team
 > **范围**: dGPU SoC 应用层决策记录（与 `docs/adr/` 框架层决策分离）
 > **关联总览**: [`README.md`](README.md)
 
@@ -28,7 +28,7 @@ ArchForge 所在的 CppTLM 项目有**双层 ADR 体系**，两层**严格分离
 | **示例议题** | 事务追踪、错误处理、端口类型 | 一致性协议、CU 建模粒度、Host-GPU 接口 |
 | **稳定性** | 极稳定，跨 SoC 共用 | 较不稳定，随 SoC 拓扑变化 |
 | **前缀** | `ADR-X.NN-` | `ADR-SOC-NN-` |
-| **当前规模** | 13 份（X.1-X.13） | **24 份**（SOC-01..24） |
+| **当前规模** | 13 份（X.1-X.13） | **31 份**（SOC-01..31） |
 | **维护方** | 框架层 owner | SoC 设计 owner |
 
 > **本文档范围**：仅 `docs/adr/`（应用层）。框架层 ADR 见 CppTLM 仓 `docs/adr/`。
@@ -56,7 +56,7 @@ ArchForge 所在的 CppTLM 项目有**双层 ADR 体系**，两层**严格分离
 
 ---
 
-## 3. ADR 索引表（24 份完整列表）
+## 3. ADR 索引表（31 份完整列表）
 
 > 数据来源：2026-09-23 扫读各 ADR 头部。完整列表以本仓 `docs/adr/ADR-SOC-NN-*.md` 为准。
 
@@ -74,7 +74,7 @@ ArchForge 所在的 CppTLM 项目有**双层 ADR 体系**，两层**严格分离
 | [ADR-SOC-20](./adr/ADR-SOC-20-cpptlm-abi-secondary-slimming.md) | CppTLM ABI 二级精简 18→15 函数 + 宏化（修订版） | Phase 9+ P5 |
 | [ADR-SOC-25](./adr/ADR-SOC-25-cep-aligned-coherence-architecture.md) | **一致性架构改采 CEP 框架对齐**（协议插件化 + 能力声明 + 3 域重划 + 撤下 `snoop_callback` + **per-network VC 分配矩阵** + R-1~R-13 需求单；[复核回执 N-1~N-4](roadmap/cep-interface-alignment-review-2026-10-21.md)） | 跨仓答复轮 (2026-10-21) |
 
-### 3.2 提案（📋 Proposed）— 14 份
+### 3.2 提案（📋 Proposed）— 20 份
 
 | ADR | 议题 | 关联阶段 |
 |-----|------|---------|
@@ -87,12 +87,18 @@ ArchForge 所在的 CppTLM 项目有**双层 ADR 体系**，两层**严格分离
 | [ADR-SOC-12](./adr/ADR-SOC-12-host-bypass-and-rc.md) | Host Bypass 软件 bring-up 路径 + 自研 RC PF0-only 简化 | Phase 7-8 |
 | [ADR-SOC-13](./adr/ADR-SOC-13-axi-stream-adapter-mapper.md) | AXI Stream Adapter + AXI4Mapper 集成 | Phase 5-6 |
 | [ADR-SOC-14](./adr/ADR-SOC-14-v55-integration-revision.md) | v5.5+ 系统级硬件仿真集成修订 | v1.0+ |
-| [ADR-SOC-15](./adr/ADR-SOC-15-cdna-real-isa-roadmap.md) | dGPU SoC v1.0 CDNA 真实物理 ISA 演进路线图 | v1.0+ |
+| [ADR-SOC-15](./adr/ADR-SOC-15-cdna-real-isa-roadmap.md) | dGPU SoC v1.0 CDNA 真实物理 ISA 演进路线图 ⚠️ **Phase C 已由 ADR-SOC-26 取代**（阶段 A/B 保留） | v1.0+ |
 | [ADR-SOC-19](./adr/ADR-SOC-19-axi-master-outbound-bridge.md) | PcieEndpointIP AXI Master/Slave 角色边界明确化 | Phase 10+ 评估 |
 | [ADR-SOC-21](./adr/ADR-SOC-21-v31-rev2-topology-correction.md) | dGPU SoC V3.1-Rev2.0 拓扑修正 | Phase 9+ MAS |
 | [ADR-SOC-22](./adr/ADR-SOC-22-nsa-fabric-address-format.md) | NSA-aware 64-bit Fabric Address 格式 | NSA Stage 1 |
 | [ADR-SOC-23](./adr/ADR-SOC-23-nsa-vs-plan-b-selection.md) | NSA-aware 分布式 Scale-Up vs 方案 B 选型 | NSA Stage 1-3 |
 | [ADR-SOC-24](./adr/ADR-SOC-24-capability-based-multitenant-isolation.md) | Capability-Based 多租户隔离选型 | NSA Stage 1-3 |
+| [ADR-SOC-26](./adr/ADR-SOC-26-self-authored-gpu-isa-as-sole-isa.md) | **自研 GPGPU ISA 为本仓唯一 ISA**（取代 CDNA 路线；PTX/CDNA3/SASS 降级为研究参考；取代 ADR-SOC-15 Phase C；ADR-SOC-16 接缝处置） | B-0..B-5（自研 ISA 路线） |
+| [ADR-SOC-27](./adr/ADR-SOC-27-compiler-driven-dependence-management.md) | **依赖管理由编译器静态承担**（不变式 D-1/D-1′/D-2/D-3 + 架构保证 A-1/A-2 + 控制块按域裁剪 21/16 bit + 依赖面积 0.121% RF） | B-0..B-4 |
+| [ADR-SOC-28](./adr/ADR-SOC-28-late-addr-war-via-gap-stall.md) | **late-addr 访存类与 WAR 的 gap-stall 表达**（取消 WAR 计数器/槽；D-1′；实例级义务 W-1..W-3；取代 36 号 Q-1） | B-0 / B-2 / B-3 |
+| [ADR-SOC-29](./adr/ADR-SOC-29-dual-domain-scalar-vector-structure.md) | **标量/向量双域结构与跨域规则**（独立 SGPR/SALU + VGPR/VALU；X-D1..X-D5；VCC 迁出 SGPR 改独立谓词文件 `VP[8]`） | B-0 / B-5 |
+| [ADR-SOC-30](./adr/ADR-SOC-30-isa-encoding-48-64-variable-length.md) | **ISA 指令编码**（48/64 bit 变长 + 16-bit 粒度；`fmt` 8 类 × 11-bit opcode；8 种形态恰好填满；控制块按域裁剪） | B-0 / B-2 / B-5 |
+| [ADR-SOC-31](./adr/ADR-SOC-31-simt-execution-model-and-reconvergence.md) | **SIMT 执行模型**（wave 32；架构状态清单；谓词化用 opcode 变体；发散汇合用编译器显式 `JOIN`） | B-0 / B-1 / B-5 |
 
 ### 3.3 状态未明确标注 — 1 份
 
@@ -150,6 +156,15 @@ ArchForge 所在的 CppTLM 项目有**双层 ADR 体系**，两层**严格分离
 │  CEP 对齐（2026-10-21，跨仓答复轮）                                │
 │  ──────────────────────────────────                              │
 │  · ADR-SOC-25  一致性架构改采 CEP 框架对齐                          │
+├──────────────────────────────────────────────────────────────────┤
+│  自研 GPGPU ISA（2026-10-29）                                      │
+│  ──────────────────────────────────                              │
+│  · ADR-SOC-26  自研 ISA 为唯一 ISA（取代 ADR-SOC-15 Phase C）      │
+│  · ADR-SOC-27  依赖管理由编译器静态承担                             │
+│  · ADR-SOC-28  late-addr 类与 WAR 的 gap-stall 表达                │
+│  · ADR-SOC-29  标量/向量双域结构与跨域规则                          │
+│  · ADR-SOC-30  指令编码 48/64 bit 变长                             │
+│  · ADR-SOC-31  SIMT 执行模型与显式汇合                              │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -215,6 +230,12 @@ v1.0（2027-Q3+）
 | ADR-SOC-23 | `architecture/23-dist-scale-up-topology.md` + `architecture/21-dist-scale-up-topology-b.md` |
 | ADR-SOC-24 | `architecture/27-nsa-capability.md` |
 | ADR-SOC-25 | `architecture/32-cep-based-coherence-architecture.md` + `architecture/09-coherence-protocol.md` + `architecture/25-nsa-hardware.md` §4 |
+| ADR-SOC-26 | `architecture/37-new-isa-design-charter.md` + `architecture/40-new-isa-spec-skeleton.md` |
+| ADR-SOC-27 | `architecture/36-new-isa-dependence-layer-design.md` + `architecture/40-new-isa-spec-skeleton.md` §4 |
+| ADR-SOC-28 | `architecture/36-new-isa-dependence-layer-design.md` §4.1.5/§4.1.6 + `architecture/40-new-isa-spec-skeleton.md` §4.2/§4.5 |
+| ADR-SOC-29 | `architecture/38-new-isa-dual-domain-structure.md` + `architecture/40-new-isa-spec-skeleton.md` §1/§2/§6 |
+| ADR-SOC-30 | `architecture/40-new-isa-spec-skeleton.md` §3 + `architecture/36-new-isa-dependence-layer-design.md` §4.5 |
+| ADR-SOC-31 | `architecture/40-new-isa-spec-skeleton.md` §1 + `architecture/39-new-isa-compiler-backend.md` §1.4 |
 
 ### 5.2 ADR → 微架构（microarchitecture/）引用
 
@@ -326,6 +347,7 @@ v1.0（2027-Q3+）
 
 | 日期 | 版本 | 修订 |
 |------|------|------|
+| 2026-10-29 | v3.3 | 新增 `ADR-SOC-26`..`ADR-SOC-31`（自研 GPGPU ISA 路线：唯一 ISA / 编译器驱动依赖层 / late-addr 与 gap-stall / 双域结构 / 48-64 bit 变长编码 / SIMT 执行模型）；`ADR-SOC-15` 的 Phase C 标记为被 ADR-SOC-26 取代（阶段 A/B 保留） |
 | 2026-10-21 | v3.2 | `ADR-SOC-25` 推进至 ✅ Accepted（复核轮 N-1~N-4 裁决完毕）；新增 `docs/roadmap/cep-interface-alignment-review-2026-10-21.md` 复核回执 |
 | 2026-10-21 | v3.1 | 新增 `ADR-SOC-25`（一致性架构改采 CEP 框架对齐） |
 | 2026-09-23 | v3.0 | ArchForge 重整：新建本文档；按战略阶段重排 ADR；新增 §4 演化路径追溯；§5 三维引用矩阵 |

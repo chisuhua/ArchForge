@@ -1,8 +1,8 @@
 # SoC Architecture Decision Records (ADR-SOC)
 
-> **版本**: 2.4
+> **版本**: 2.5
 > **创建日期**: 2026-06-14
-> **更新日期**: 2026-10-21（新增 ADR-SOC-25：一致性架构改采 CEP 框架对齐 —— 跨仓答复 CppTLM CEP 提问单；复核轮 N-1~N-4 裁决完毕 → ✅ Accepted）
+> **更新日期**: 2026-10-29（新增 ADR-SOC-26..31：自研 GPGPU ISA 路线 —— 唯一 ISA / 编译器驱动依赖层 / late-addr 与 gap-stall / 双域结构 / 48-64 bit 变长编码 / SIMT 执行模型）
 > **范围**: CppTLM SoC 仿真架构决策（CPU/GPU/IO/Cache/NoC 集成层）
 > **与 `docs/adr/` 的关系**: 本目录存放**应用层（SoC 设计）**决策；`docs/adr/` 存放**框架层（仿真基础设施）**决策。两层分离，避免 SoC 决策与框架决策混淆。
 
@@ -43,6 +43,12 @@
 | [ADR-SOC-23-nsa-vs-plan-b-selection.md](./ADR-SOC-23-nsa-vs-plan-b-selection.md) | **NSA-aware 分布式 Scale-Up vs 方案 B 选型**（主选方案 C + 方案 B 降级；Stage 1 严格 TLM 功能模型层；per OpenSpec `2026-09-19-cpptlm-nsa-scale-up-umbrella`） | 📋 Proposed | NSA Stage 1-3 (2026-2029) |
 | [ADR-SOC-24-capability-based-multitenant-isolation.md](./ADR-SOC-24-capability-based-multitenant-isolation.md) | **Capability-Based 多租户隔离选型**（128 bits Token + HW 校验 + 5 阶段生命周期；Stage 1 推迟 HW 强制校验到 Stage 2；per OpenSpec `2026-09-19-cpptlm-nsa-scale-up-umbrella`） | 📋 Proposed | NSA Stage 1-3 (2026-2029) |
 | [ADR-SOC-25-cep-aligned-coherence-architecture.md](./ADR-SOC-25-cep-aligned-coherence-architecture.md) | **一致性架构改采 CEP 框架对齐**（协议逻辑下沉为 CppTLM ProtocolEngine 插件 + 能力以数据声明 + 一致性域重划为 D-CPU/D-GPU/D-FABRIC 3 域 + 撤下 `snoop_callback` 直连 + P0-3 映射表 + **per-network VC 分配矩阵** + 对 CEP 的 R-1~R-13 需求单；per CppTLM CEP 提问单答复轮 + [复核回执 N-1~N-4](../roadmap/cep-interface-alignment-review-2026-10-21.md)） | ✅ Accepted | 跨仓答复轮 (2026-10-21) |
+| [ADR-SOC-26-self-authored-gpu-isa-as-sole-isa.md](./ADR-SOC-26-self-authored-gpu-isa-as-sole-isa.md) | **自研 GPGPU ISA 为本仓唯一 ISA**（取代 CDNA 路线；PTX/CDNA3/SASS 降级为研究参考；取代 ADR-SOC-15 Phase C） | 📋 Proposed | B-0..B-5 |
+| [ADR-SOC-27-compiler-driven-dependence-management.md](./ADR-SOC-27-compiler-driven-dependence-management.md) | **依赖管理由编译器静态承担**（D-1/D-1′/D-2/D-3 + A-1/A-2 + 控制块 21/16 bit + 0.121% RF） | 📋 Proposed | B-0..B-4 |
+| [ADR-SOC-28-late-addr-war-via-gap-stall.md](./ADR-SOC-28-late-addr-war-via-gap-stall.md) | **late-addr 类与 WAR 的 gap-stall 表达**（取消 WAR 槽/计数器；D-1′；W-1..W-3） | 📋 Proposed | B-0/B-2/B-3 |
+| [ADR-SOC-29-dual-domain-scalar-vector-structure.md](./ADR-SOC-29-dual-domain-scalar-vector-structure.md) | **标量/向量双域结构与跨域规则**（X-D1..X-D5；VCC 迁出 SGPR 改独立谓词文件） | 📋 Proposed | B-0/B-5 |
+| [ADR-SOC-30-isa-encoding-48-64-variable-length.md](./ADR-SOC-30-isa-encoding-48-64-variable-length.md) | **ISA 指令编码**（48/64 bit 变长；`fmt` 8 类；8 形态恰好填满） | 📋 Proposed | B-0/B-2/B-5 |
+| [ADR-SOC-31-simt-execution-model-and-reconvergence.md](./ADR-SOC-31-simt-execution-model-and-reconvergence.md) | **SIMT 执行模型**（wave 32；架构状态清单；opcode 变体谓词化；显式 `JOIN`） | 📋 Proposed | B-0/B-1/B-5 |
 
 ## 与 `docs/adr/ADR-X.17-cpptlm-v05-mvp.md` 的 cross-reference(已迁回本目录)
 

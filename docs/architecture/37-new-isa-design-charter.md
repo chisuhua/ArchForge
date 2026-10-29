@@ -5,6 +5,7 @@
 > **Owner**: CppTLM Team
 > **文档分类**: 第 1 层 · ISA 设计总纲（**项目级路线与边界**）
 > **关联裁决**: [`36-new-isa-dependence-layer-design.md`](./36-new-isa-dependence-layer-design.md) §7 **Q-8**（取代关系）
+> **配套 ADR**: [`ADR-SOC-26`](../adr/ADR-SOC-26-self-authored-gpu-isa-as-sole-isa.md)（自研 ISA 为唯一 ISA —— 本仓 Q-8 取代关系的 ADR 载体）
 > **配套文档**: [`38-new-isa-dual-domain-structure.md`](./38-new-isa-dual-domain-structure.md)（**标量/向量双域结构**）· [`39-new-isa-compiler-backend.md`](./39-new-isa-compiler-backend.md)（**编译器后端方案**）
 > **上游依据**:
 > - [`36-…`](./36-new-isa-dependence-layer-design.md)（新 ISA 依赖层设计方案；Q-1..Q-8 已裁决）

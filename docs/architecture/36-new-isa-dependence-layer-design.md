@@ -11,6 +11,7 @@
 > - [`arXiv1804.06826` 解析](../research/SM/CudaCore/arXiv1804.06826_Volta微基准_寄存器复用与bank冲突_解析.md)（Table 4.1 延迟分档 + 控制位字段）
 > - [`gpgpu-sim_操作数收集器实现剖析`](../research/SM/CudaCore/gpgpu-sim_操作数收集器实现剖析.md)（学术口径）
 > - [`ADR-SOC-15`](../adr/ADR-SOC-15-cdna-real-isa-roadmap.md)（CDNA 真实 ISA 演进路线图）/ [`11-cdna-real-isa-integration.md`](./11-cdna-real-isa-integration.md)（ISA 中立 timing 宿主 + `InstrDescriptor` 契约）
+> **配套 ADR**: [`ADR-SOC-27`](../adr/ADR-SOC-27-compiler-driven-dependence-management.md)（依赖管理由编译器静态承担）· [`ADR-SOC-28`](../adr/ADR-SOC-28-late-addr-war-via-gap-stall.md)（late-addr 与 WAR 的 gap-stall 表达）
 > **规范落地**: 本文的结论已收敛为 [`40-new-isa-spec-skeleton.md`](./40-new-isa-spec-skeleton.md)（B-0 规范骨架）—— **规范语句以 40 号为准**，本文保留论证与裁决历史。
 > **关联 OpenSpec changes**: 无（本文未实施）
 > **定位说明**:

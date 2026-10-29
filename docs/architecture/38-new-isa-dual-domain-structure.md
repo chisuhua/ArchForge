@@ -9,6 +9,7 @@
 > - **AMD CDNA1/2/3 Shader ISA 手册**（gfx908 / gfx90a / gfx942）：SGPR 分配、SALU/VALU 指令集、SMEM 编码、MFMA Cycles 列
 > - **LLVM AMDGPU 后端源码**（`SIRegisterInfo.td` / `SIInstrFormats.td` / `SOPInstructions.td` / `VOP*Instructions.td` / `SIInstrInfo.cpp` / `SIFixSGPRCopies.cpp` / `GCNRegBankReassign.cpp`）
 > - [`33-sm-operand-supply-design-target.md`](./33-sm-operand-supply-design-target.md) v0.5（OSF：向量域结论）/ [`34-…ipc-timing-analysis.md`](./34-sm-operand-supply-ipc-timing-analysis.md)（IPC 模型）/ [`35-…`](./35-sm-dependence-management-architecture.md) / [`36-…`](./36-new-isa-dependence-layer-design.md)（依赖层）
+> **配套 ADR**: [`ADR-SOC-29`](../adr/ADR-SOC-29-dual-domain-scalar-vector-structure.md)（标量/向量双域结构与跨域规则）
 > **规范落地**: 本文的双域规则已规范化为 [`40-new-isa-spec-skeleton.md`](./40-new-isa-spec-skeleton.md) §1 / §2 / §6。
 > **关联 OpenSpec changes**: 无
 > **定位说明**:

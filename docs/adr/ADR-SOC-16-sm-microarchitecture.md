@@ -177,4 +177,4 @@ StreamingMultiprocessorTLM (顶层 ChStreamModuleBase + IComputeDevice)
 
 ## Status Update
 
-（暂无更新）
+- **2026-10-29**: ⚠️ **接缝处置（随 [`ADR-SOC-26`](./ADR-SOC-26-self-authored-gpu-isa-as-sole-isa.md) 签批生效）**。本 ADR 的启动前提写明「CDNA Real ISA 集成（ADR-SOC-15）启动后」，且 12 子模块含 `MatrixCore = CDNA MFMA 子集（per 13 号）` ⇒ 新 ISA 路线（ADR-SOC-26 Q-8 取代关系）动摇了该前提与一个子模块的内容来源。**处置原则**：**12 子模块的 timing 宿主结构保留**（Fetch / Decode / Issue / ScalarALU / VectorALU / SIMTLane / LsuGlobal / LsuLDS / RegFileUnit / WritebackUnit / HazardTracker + 8 Bundle + `IComputeDevice` 15 方法 —— 均为 ISA 中立）；**CDNA 特定内容**（MFMA 子集、CDNA 延迟类、CDNA 指令编码）**降级为参考实现**，随新 ISA 前端替换。**本 ADR 的其余决策（SM 拓扑、Bundle、接口、SM-owns-state、Gate bit-exact）不受影响。**
