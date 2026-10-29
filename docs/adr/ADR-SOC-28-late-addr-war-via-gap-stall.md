@@ -3,7 +3,7 @@
 > **状态**: 📋 Proposed（**待签批**）
 > **日期**: 2026-10-29
 > **Owner**: ArchForge Team
-> **影响**: 自研 ISA 的依赖层 WAR 机制；依赖状态面积；编译器 A-1/A-4 pass
+> **影响**: 自研 ISA 的依赖层 WAR 机制；依赖状态面积；编译器 **M-1 / M-4** pass
 > **类别**: ISA 依赖管理 / 正确性机制
 > **实施**: OpenSpec change（待建）—— B-0 / B-2 / B-3
 > **关联**: [`36-new-isa-dependence-layer-design.md`](../architecture/36-new-isa-dependence-layer-design.md) §4.1.5 / §4.1.6（本 ADR 的完整推导 + 可复现验证脚本）· [`40-new-isa-spec-skeleton.md`](../architecture/40-new-isa-spec-skeleton.md) §4.5 / §4.2 · [`ADR-SOC-27`](./ADR-SOC-27-compiler-driven-dependence-management.md)（父决策）
@@ -110,8 +110,8 @@ NVIDIA 用 WAR 计数器，是因为它的 WAR 释放点是**硬件内部行为*
 | 阶段 | 内容 | 门禁 |
 |---|---|---|
 | **B-0** | 规范落地：40 号 §4.5 / §4.2（S-DEP-2a / 2b / 6a / 6b）、§3.5（late-addr 的 opcode 变体预留） | 本 ADR 签批 |
-| **B-2** | **A-4**（late-addr 判定）+ A-1 中的 gap 累计 `stall` 计算 | 单指令级差分 100% 通过 |
-| **B-3** | A-2 + W-1/W-2 的实例级检查 | 多指令序列差分通过 |
+| **B-2** | **M-4**（late-addr 判定：分类 + **W-1/W-2 实例级验证**，不满足即撤销 `.LATE`）+ **M-1** 中的 gap 累计 `stall` 计算与 **RAW/WAR 义务的 max 合成**（36 号 §4.1.6 / 40 号 S-DEP-2b） | 单指令级差分 100% 通过 |
+| **B-3** | **M-2**（槽分配）+ W-1/W-2 的实例级检查（归 **M-4**） | 多指令序列差分通过 |
 
 ## 6. Verification（**前瞻判据，尚未验证**）
 

@@ -467,7 +467,7 @@ IPC_max = min( I_issue , W / r , 1 / max_b_avg )
 每槽额外位: width(2) + producer_pc(16) + budget(3) = 20 bit   ← v0.3 删除 valid 位
 每 sub-core 额外: 6 × 20 = 120 bit
 每 SM (4 sub-core): 480 bit ≈ 60 B
-另: demand_miss 计数器 2 bit × 3 op_pos × 64 warp = 384 bit/SM（budget_max ≤ 1 时不维护）
+另: demand_miss 计数器 2 bit × 3 op_pos × 48 warp = 288 bit/SM（budget_max ≤ 1 时不维护）
 ```
 
 > **tag 位不计入"额外位"的依据（v0.4 补，N4）**：Ampere 的 RFC 条目**已经**必须存 `warp_id + reg_id`（命中条件要求逐位比较），`op_pos` 由子条目索引隐含 → **tag 的 18 bit 是存量结构，非增量**。本设计的**净增** = `width(2) + producer_pc(16) + budget(3) − valid(1)` ≈ **20 bit/槽**；若 `producer_pc` 省略（§9 开放问题 1）则为 **4 bit/槽**。
@@ -794,7 +794,7 @@ Execute(i) 的准入条件 = (cycle ≥ issue(i) + L) AND (所有源已就绪)
 | **C-5（WAR 依赖计数器，读源时释放）**〔**仅 NV 建模后端**；新 ISA 见 40 号 S-DEP-6〕 | 每 warp 维护 **WAR 计数器**：消费者在 `issue` 拍**递增**其"正在读取的源寄存器"计数器，**在读完源操作数（`issue+2`）时递减**；生产者（写回端）在写该寄存器前**检查该计数器非零则等待**。⇒ 消费者读到**旧值**（程序序正确），生产者被阻塞而非消费者 | 原文：「For WAR hazards, the mechanism is similar, with the only difference being that **the counter is decreased after the instruction reads its source operands**, instead of decreasing the counter at write-back」；「**Clearing WAR dependencies after reading the source operands is an important optimization**, since source operands are sometimes read much earlier than the result is produced, especially for memory instructions」 |
 | **C-6（MCOS 命中优先于 RF 读）** | 消费者在 `issue` 拍命中 MCOS 槽时，取**槽值**（= 写回当拍写入的值）；该值在 `issue` 拍**确定并交付**，不随之后续 INVALIDATE 改变 | OSF 特有（MCOS 侧）；与 NVIDIA 的"消费者不被延后（bypassing）"一致 |
 | **C-7（写回不阻塞在飞读）** | 写回与在飞读同拍发生**不产生端口冲突**（读写端口独立，方向不同） | 「each register file bank has a dedicated write port of 1024 bits」；写冲突由 result queue 吸收 |
-| **C-8（面积代价）**〔**仅 NV 建模后端**〕 | WAR 计数器：每 warp 2 个 × 6 bit = **12 bit/warp** → 64 warp/SM = **768 bit/SM ≈ 0.037% RF**（对比 v0.4 值锁存方案 ≈ 1.2% RF，**降低约 30×**） | NVIDIA 全套控制字 41 bit/warp = **0.09% RF** |
+| **C-8（面积代价）**〔**仅 NV 建模后端**〕 | WAR 计数器：每 warp 2 个 × 6 bit = **12 bit/warp** → 48 warp/SM = **576 bit/SM ≈ 0.027% RF**（对比 v0.4 值锁存方案 ≈ 1.2% RF，**降低约 30×**） | NVIDIA 全套控制字 41 bit/warp = **0.09% RF** |
 
 > **C-5 的代价（诚实标注）**：**写者可能被读者阻塞**——若消费者的源读迟迟不发生（e.g. 它自己被前面的依赖卡住），生产者要一直等。NVIDIA 真实硬件**就是这个行为**（写回端等计数器归零），且由编译器排程规避（把长延迟读挪到独立指令序列）。OSF 采纳同一取舍：**正确性优先，且与实测硬件一致**。
 >
@@ -859,7 +859,7 @@ Execute(i) 的准入条件 = (cycle ≥ issue(i) + L) AND (所有源已就绪)
 | 读端口利用率（2 源指令密集） | 100%（已饱和） | **100%（不变）** | **v0.4 修正**：v0.3 的"2/3 ≈ 67% → 95%+"基于"窗口独占"错误前提（§4.2.1），**不可达** |
 | RF 读带宽（窄值 kernel） | 1× | **0.25–0.5×**（**位宽**，非读次数） | WABR |
 | 槽面积成本 | — | **≈ 0.023% RF 面积**（`producer_pc` 省略则 0.006%；含 `demand_miss` 仍 < 0.05%） | MCOS 增量位估算 |
-| **WAR 依赖计数器成本** | — | **≈ 0.037% RF 面积**（12 bit/warp × 64 warp） | C-5；§5.2.2 对比硬件 scoreboard 的 5.32% |
+| **WAR 依赖计数器成本** | — | **≈ 0.027% RF 面积**（12 bit/warp × **48 warp**，与 35 号 §4.2.2 / 36 号 §4.2.2 同基数） | C-5；§5.2.2 对比硬件 scoreboard 的 5.32% |
 | 冲突气泡（3 源同 bank 场景） | 2 拍/指令 | **0–1 拍/指令** | ERW（提前收集跨过 issue 边界） |
 | 依赖链延迟 | 4 cycle | **4 cycle（不变）** | **明确不在范围内**（§4.4.1b：`d = 1`） |
 | Execute 时机契约 | 编译期已知 | **编译期已知（不变）** | §5 |
@@ -928,7 +928,7 @@ Execute(i) 的准入条件 = (cycle ≥ issue(i) + L) AND (所有源已就绪)
 
 | 期 | 名称 | 内容 | 产出 | 依赖 |
 |----|------|------|------|------|
-| **P1** | **现代口径基线** | `RegFileUnit` 加 bank 维度 + `register_bank()`（**硬件口径 `reg_index % N`**，非 gpgpu-sim 的 `+ warp_id`）；新增 `OperandSupplyUnit`（Allocate 级端口预约 + 气泡产生）；`IssueToExecBundle` **不动** | 与 Ampere 口径对齐的可信基线 | 无（可独立做） |
+| **P1** | **现代口径基线**〔**⚠ v0.6：ADR-SOC-26 后，本期产物不再作为「NV 前端实现路径」，而作为「trace-replay 校准的行为口径」——具体归属待 37 号 §5 第 10 条裁决**〕 | `RegFileUnit` 加 bank 维度 + `register_bank()`（**硬件口径 `reg_index % N`**，非 gpgpu-sim 的 `+ warp_id`）；新增 `OperandSupplyUnit`（Allocate 级端口预约 + 气泡产生）；`IssueToExecBundle` **不动** | 与 Ampere 口径对齐的可信基线 | 无（可独立做） |
 | **P2** | **RFC / MCOS(budget=1)** | `RegFileUnit` 加槽表（每 bank × op_pos 1 entry × 6 子条目）；`CtrlBits` 加 `reuse_mask`；**`eviction` 策略**（read_once / budgeted）**用 config 开关二选一** | 操作数复用可建模 | P1 |
 | **P3** | **探索机制** | MCOS `budget` 语义 + 硬件自适应；ERW 提前收集；WABR 宽度自适应 | 前沿探索 | P2 + 评审通过 |
 
@@ -1001,7 +1001,7 @@ v0.1 用一个 `invalidation: read_once | on_write` 键混装了**两个正交�
 | **R10** | ~~读带宽供给 `W` 口径未裁决~~ | — | ✅ **v0.5 关闭**：裁决 `W = 2`（§3.1.1 三条论据：面积 / RFC 存在性 / 峰值可达性分析）。`W=3` 不采纳（需第 3 组 1024-bit 读写口，§10 已否决） |
 | **R11** | **显式偏离 Ampere 两条实测语义**（§4.1.2 推论对照表）：① "任意读请求打到同 `(bank, op_pos)` 即失效（无论命中与否）" OSF **未实现**；② "消费者重置 `.reuse` 即 re-arm" OSF **不可表达** | ① 只会**多命中**（更保守，不会错值）但与现状**行为不一致**；② 消费者数 N 运行时才确定时**无法复用** | ① 作为**有意的偏离**登记（保留槽更久 = 语义安全方向）；② 由 `budget_hint` 承载，**hint 少给→miss、多给→驻留变久**（均只是性能问题，见 §4.1.5 护栏）。**必须在实现期做行为差分测试**（§12 V11） |
 | **R12** | **自适应预算是极限环而非稳态**（§4.1.3c 收敛性）：`budget` 在 1 ↔ `budget_max` 之间周期振荡 | 性能：平均 budget 介于两者之间，**低于**理论上限；不影响正确性 | 显式登记，避免实现方按"第 4 次进入稳态"实现；如需真稳态需加迟滞状态（额外面积）→ §12 V7 调参时一并评估 |
-| **R13** | **WAR 语义需依赖计数器**（§5.1 C-5，v0.5 改）：per-warp WAR 计数器，**读源时释放**〔**仅 NV 建模后端**〕 | 面积 ≈ **0.037% RF**（12 bit/warp × 64 warp）；**写者可能被读者阻塞**（与 NVIDIA 实测同构） | 与 §4.1.6 的槽面积成本**分开记账**；写回端需实现"等 WAR 计数器归零"（依赖 §12 V13 的写回时序建模） |
+| **R13** | **WAR 语义需依赖计数器**（§5.1 C-5，v0.5 改）：per-warp WAR 计数器，**读源时释放**〔**仅 NV 建模后端**〕 | 面积 ≈ **0.027% RF**（12 bit/warp × **48 warp**）；**写者可能被读者阻塞**（与 NVIDIA 实测同构） | 与 §4.1.6 的槽面积成本**分开记账**；写回端需实现"等 WAR 计数器归零"（依赖 §12 V13 的写回时序建模） |
 | **R14** | **`W = 2` 下 IPC = 1.000 不是自动达成**（§4.1.4c）：必须有复用机会 + `budget_hint` 正确 + 剩余源跨 bank | **无复用机会的负载恒停在 IPC 0.667**（如寄存器压力极大的标量代码） | 硬件无法弥补——**编译器是唯一能创造复用机会的主体**（I3）。故 MCOS 的 `budget_hint` 与编译器寄存器分配必须协同设计；§8.2 P3 的 profiling 须专门统计"3 源指令的复用命中率" |
 
 ### 开放问题（需评审裁决）
@@ -1011,7 +1011,7 @@ v0.1 用一个 `invalidation: read_once | on_write` 键混装了**两个正交�
 3. **ERW 是否值得做 + `budget_max` 上限取值**：ERW 收益依赖"同 warp 连续发射"（跨 warp 交错下大幅缩水，见 §4.2.4），需先有基线 profiling 才能判断；`budget_max` 的上限（4 / 16）也需按 R1b 的实测调参 → **建议 P3 阶段先做 profiling 再决策**。**v0.4 追加**：ERW 的**稳态 IPC 收益为 0**（§4.2.3），其价值只剩**气泡削减** → profiling 应专门测"bank 偏斜场景的气泡数"。
 4. **`eviction` 默认值**：`read_once`（= 实测口径，默认，已在 §8.3 定为 `read_once`）vs `budgeted`（= OSF 口径）。**建议默认 `read_once`**（对齐真实硬件，且保证"退化为 read-once 生命周期"成立）；`budgeted` 作 opt-in 对照模式。
 5. **`multi_consumer` 的门控粒度**：是全局 config 开关（本提案 v0.3 的做法），还是**按编译器的 `budget_hint` 逐指令生效**（`hint ≥ 2` 即自动允许，无需全局开关）？后者更细粒度但实现更复杂 → **待裁决**。
-6. **`demand_miss` 是否需要区分寄存器**？v0.4 的信号统计"该 op_pos 上**取数失败**的次数"，**不区分是不是同一个寄存器**（区分需额外存 `last_tag`，18 bit × 3 op_pos × 64 warp ≈ 3.4 Kbit/SM）。不加 `last_tag` 时信号会偏乐观（安全但可能浪费槽位）；加则更准但面积上升 → **待裁决**。
+6. **`demand_miss` 是否需要区分寄存器**？v0.4 的信号统计"该 op_pos 上**取数失败**的次数"，**不区分是不是同一个寄存器**（区分需额外存 `last_tag`，18 bit × 3 op_pos × 48 warp ≈ 2.6 Kbit/SM）。不加 `last_tag` 时信号会偏乐观（安全但可能浪费槽位）；加则更准但面积上升 → **待裁决**。
 
 ---
 
@@ -1197,7 +1197,7 @@ v0.1 用一个 `invalidation: read_once | on_write` 键混装了**两个正交�
 | ~~V2~~ | ~~`sizeof(InstrDescriptor)` 是否真 == 128、余量是否真为 0~~ | 编译期实测 | ✅ **已闭合（2026-10-28）**：`sizeof = 128`、`reserved_hdr@4` / `reserved_mem@100`（各 4B → 8B padding）、`CtrlBits = 4 B` | **完成** |
 | V3 | **`openspec list --json` 实测确认无 active change 涉及 SM 操作数供给** | 仓库状态 | 本文头部标"未核实"；本提案**不创建** openspec change，但实施时需另起 | build（实施时） |
 | V4 | **HSK-9 的 bundle size constraint 原文** | 契约 | `sm_bundles_tlm.hh:40` 注释称"per HSK-9 spec size constraint"，但**未在权威 spec**（`docs/superpowers/specs/2027-02-09-hsk-9-icompute-api-v1-sm-rewrite.md`）中检索到该原文（标注"未核实"） | 跨仓（HSK 流程） |
-| V5 | **`demand_miss` 是否需要 `last_tag` 区分寄存器** | 开放问题 6 | 加 `last_tag`（18 bit × 3 op_pos × 64 warp ≈ 3.4 Kbit/SM）可提升信号精度；不加则信号偏乐观但**安全** | 评审裁决 |
+| V5 | **`demand_miss` 是否需要 `last_tag` 区分寄存器** | 开放问题 6 | 加 `last_tag`（18 bit × 3 op_pos × 48 warp ≈ 2.6 Kbit/SM）可提升信号精度；不加则信号偏乐观但**安全** | 评审裁决 |
 | V6 | **ERW 的基线 profiling** | 性能数据 | §9 开放问题 3：ERW 的**稳态 IPC 收益为 0**（v0.4 修正）→ profiling 应**专测"bank 偏斜场景的气泡数"**，而非"整体读带宽利用率" | P3 前 |
 | V7 | **`budget_max` 上限（4 / 16）实测调参** | 性能数据 | R1b：驻留变长会放大跨 warp 切换的 +1 cycle 惩罚；**并评估 R12 的极限环是否需要加迟滞** | P3 前 |
 | V8 | **WABR 窄值占比统计** | 编译期数据 | R3b：若窄值已被符号扩展到 32 bit 容器，WABR 零收益 | P3 前 |
@@ -1205,7 +1205,7 @@ v0.1 用一个 `invalidation: read_once | on_write` 键混装了**两个正交�
 | ~~**V10**~~ | ~~ALU 流水线深度 `d` 的裁决~~（开放项 O-2） | 架构裁决 | ✅ **v0.5 已裁决 `d = 1`**（§4.4.1b）；**并更正上游「5/6/7」误读**（SYNTHESIS §1 + 两处 overview 已回写标注） | **完成** |
 | **V11** | **OSF 与 Ampere RFC 的行为差分测试**（风险 R11） | 验证 | 针对"任意读即失效"与"消费者 `.reuse` re-arm"两条**有意偏离**，构造差分用例（miss-then-match 序列、producer→N consumer 链），确认 OSF 只在**性能**维度偏离、**值语义**恒等 | build / verifier |
 | ~~**V12**~~ | ~~WAR 定序规则的成本复核~~（开放项 O-3 / 风险 R13） | 面积 | ✅ **v0.5 已裁决：采用 per-warp WAR 依赖计数器（读源时释放）**，面积 ≈ 0.037% RF（v0.4 的值锁存方案 ≈ 1.2% RF，**降低 30×**）；**新增 §5.2 五类依赖机制对照** | **完成** |
-| **V13** | **写回时序建模 + WAR 计数器落地**〔**仅 NV 建模后端**；新 ISA 后端不实现 WAR 计数器，见 40 号 S-DEP-6〕 | 实现 | CppTLM 现状：`WritebackUnit::enqueue()` **全仓无调用点** ⇒ 「按延迟占用 → 写回」尚未生效；`HazardTracker` **无 WAR / WAW**。C-5 要求写回端「等 WAR 计数器归零」⇒ 必须先把写回时序真正建模起来，并为 WAR 计数器补状态与接口 | build（P2 实施前） |
+| **V13** | **写回时序建模 + WAR 计数器落地**〔**仅 NV 建模后端**；新 ISA 后端不实现 WAR 计数器，见 40 号 S-DEP-6〕 | 实现 CppTLM 现状：`WritebackUnit::enqueue()` **全仓无调用点** ⇒ 「按延迟占用 → 写回」尚未生效；`HazardTracker` **无 WAR / WAW**。C-5 要求写回端「等 WAR 计数器归零」⇒ 必须先把写回时序真正建模起来，并为 WAR 计数器补状态与接口 | build（P2 实施前） | ⚠ **v0.6 路径重挂（critic 复审）**：ADR-SOC-26 取消了「NV 前端作为实现路径」，故本项**不再挂在 §8.2 P1（NV 前端建模）**上，而改挂到 **「trace-replay 校准」路径**（37 号 §3.4 / 12 号校准基线）—— 即：WAR 计数器只在**回放 NVIDIA 轨迹做行为对拍**时需要。**归属裁决待 37 号 §5 第 10 条落定**（建模后端的消费方）。 |
 | **V14** | **3 源指令的复用命中率统计** | 编译期数据 | R14：`W = 2` 下 IPC 1.000 **依赖复用机会存在**。须统计真实 kernel 中「3 源指令至少 1 个操作数可被复用」的比例；若普遍 < 1/3，则 MCOS 的 IPC 收益假设不成立，须重新评估 | build（P3 前） |
 
 ---

@@ -29,7 +29,7 @@
 | **②** | **四层分离**：L1 依赖层 / L2 资源层（端口、bank、FU —— **不是依赖**）/ L3 内存序层 / L4 控制层。**跨层不合并**是 OSF 的扩展不变式 | §2 |
 | **③** | **混合的正确位置 = 后端，不是依赖类型**。NV/PTX 后端（Stall counter + SB0-5 + DEPBAR）与 CDNA 后端（TLB scoreboard + vmcnt/lgkmcnt/expcnt + s_waitcnt）并存；**学术口径只作建模对照/回归校验，不作实现目标** | §3 |
 | **④** | **WAR 用「读源时释放」的计数器**：读者 issue 时递增、**读完源时递减**；写者等归零。面积 ≈ **12 bit/warp**，比"值锁存"方案低 30× | §4.2 |
-| **⑤** | **控制位预算 26 bit/指令**〔**NV 建模后端**；新 ISA 后端为 **21/16 bit**，见 §6 注〕（8 槽 ⇒ mask 8 bit）：`CtrlBits::reserved_ctrl0/1` 只有 16 bit → **差 10 bit**；解法是取 `InstrDescriptor::reserved_hdr` 的 **1 字节**（**不改变 128 字节布局**） | §6 |
+| **⑤** | **控制位预算 24 bit/指令**〔**NV 建模后端**（6 槽 ⇒ mask 6 bit）；新 ISA 后端为 **21/16 bit**，见 §6 注〕：`CtrlBits::reserved_ctrl0/1` 只有 16 bit → **差 8 bit**；解法是取 `InstrDescriptor::reserved_hdr` 的 **1 字节**（**不改变 128 字节布局**） | §6 |
 | **⑥** | **MCOS 的复用提示是"fail-safe"的**：提示错 ⇒ 命中/未命中变化 ⇒ **性能问题**，**不可能产生错误值**（tag 精确匹配 + C-3 写回失效兜底） | §7.2 |
 
 ---
@@ -137,9 +137,20 @@
 | 候选做法 | 问题 |
 |---------|------|
 | **A. 按依赖类型分配厂商**（如 RAW 用 NV、内存用 AMD） | ① 同一 warp 内出现两套不兼容的"等待"语义，编译器无法统一推理；② AMD 的 `s_waitcnt` 是**显式指令**（占 issue 槽），NV 的 DEPBAR 是**控制位**（不占）——混用会改变指令流；③ 面积账无法统一核算 |
-| **B. 按 ISA 家族分后端** ✅ | 同一 SM 模型要同时支持 PTX/NV 与 CDNA（见 [`11-cdna-real-isa-integration.md`](./11-cdna-real-isa-integration.md)）；两个 ISA 的**依赖语义本就不同**（NV 编译器负责 ALU 依赖，AMD 硬件负责），后端化是**对硬件事实的建模**，不是拼凑 |
+| **B. 按 ISA 家族分后端** ✅ | 同一 SM 模型要同时承载 PTX/NV 与 CDNA 两种**硬件行为口径**（原前提见 [`11-cdna-real-isa-integration.md`](./11-cdna-real-isa-integration.md)；**v1.1 该前提已被 ADR-SOC-26 移除**，见下方口径说明）；两个 ISA 的**依赖语义本就不同**（NV 编译器负责 ALU 依赖，AMD 硬件负责），后端化是**对硬件事实的建模**，不是拼凑 |
 
 > **结论：依赖类型决定"要不要硬件"（§1.2 判据），ISA 家族决定"硬件长什么样"（后端）。两者正交。**
+
+> **⚠ v1.1 口径澄清（critic 复审追加）：双后端在 ADR-SOC-26 之后还剩什么。**
+> ADR-SOC-26 D1 已定「**自研 ISA 是本仓 GPGPU 的唯一 ISA**」，D2 否决的是「**作为 ISA 实现路径**的三套时序模型并存」（量化理由：三套控制位宽度 26/21/16 bit 与三套延迟类语义无法共存于同一 `InstrDescriptor`）。
+> **⇒ 因此本文的「双后端」须按层级重读**：
+> | 层级 | ADR-26 之后的地位 |
+> |---|---|
+> | **作为 ISA 实现路径**（解码 + 执行 NVIDIA/CDNA 指令） | ❌ **已取消** —— `isa_type` 收敛为「单值 + 回放模式」（37 号 §5 第 6 条） |
+> | **作为硬件行为口径**（NVIDIA/AMD 的依赖语义，用于**校准对拍**） | ✅ **保留** —— 本文的 NV / CDNA 后端是**对照口径**，由 **trace-replay 校准**消费（37 号 §3.4 / 12 号校准基线），**不占用 `isa_type`，也不产生第三条实现路径** |
+>
+> **⇒ 与 ADR-26 D2 的关系**：D2 否决的是「实现路径并存」，本文保留的是「**校准口径并存**」⇒ **层级不同，不矛盾**。
+> **⇒ 仍未闭合的一项**：建模后端由谁实现、以何种产物消费 —— 归 37 号 §5 第 10 条（⏳ 待裁决）。
 
 ### 3.2 框架与后端
 
@@ -354,19 +365,19 @@ I2 发射 │      │      │      │      │      │      │      │ I2 
 | `stall_cnt` | 4 | L1（定长 RAW/WAW） | 0–15；**延迟 >15 的指令无法用此机制编码** |
 | `sb_id_raw` | 3 | L1（可变延迟 RAW/WAW） | SB0-5 |
 | `sb_id_war` | 3 | L1（WAR） | 可与 `sb_id_raw` 复用同一槽 |
-| `sb_wait_mask` | **8** | L1/L3 | 等哪些 SB 归零；**8 槽 ⇒ 8 bit**（**36 号 Q-2** 裁决，见 [36 号](./36-new-isa-dependence-layer-design.md) §7） |
+| `sb_wait_mask` | **6** | L1/L3 | 等哪些 SB 归零；**NVIDIA 实测 6 个依赖计数器 ⇒ 6 bit**（本文 §5.2.1 / 附录 A `SB[0..5]`）。⚠ **与新 ISA 的 8 bit 区分**：36 号 Q-2 的「8 槽 ⇒ 8 bit」是**新 ISA**的裁决，不适用于 NV 口径 |
 | `yield` | 1 | 调度 | 跨 warp 切换 +1 cycle |
 | `reuse_flags` | 3 | MCOS | 每 op_pos 1 bit（生产者填充槽） |
 | `budget_hint` | 2 | MCOS | 0/1/≤4/≤16 |
 | `width_hint` | 2 | WABR | 1024/512/256 bit |
-| **合计** | **26** | | Q-5 采用隐式提示 ⇒ 不需要 operand-source 字段（省 6 bit） |
+| **合计** | **24** | | Q-5 采用隐式提示 ⇒ 不需要 operand-source 字段（省 6 bit）。**v1.2 修正**：v1.1 曾按 8-bit mask 算得 26 bit ⇒ 已回到 NVIDIA 实测的 **6 槽 / 6-bit mask ⇒ 24 bit** |
 
 > ⚠ **超出 `CtrlBits` 现有余量**：`CtrlBits` 共 4 字节，其中 `reserved_ctrl0/1` = **16 bit** ⇒ **差 8 bit**。
-> **解法（不动跨仓 bundle 布局）**：从 `InstrDescriptor::reserved_hdr`（4 B，位于 header 内，实测 offset 4）取 **1 字节** ⇒ 合计 **26 bit**（8 槽 mask 8 bit），**`sizeof(InstrDescriptor)` 仍为 128**（实测确认），剩余 3 B 仍可回收。
+> **解法（不动跨仓 bundle 布局）**：从 `InstrDescriptor::reserved_hdr`（4 B，位于 header 内，实测 offset 4）取 **1 字节** ⇒ 合计 **24 bit**（6 槽 mask 6 bit），**`sizeof(InstrDescriptor)` 仍为 128**（实测确认），剩余 3 B 仍可回收。
 >
-> **⚠ 后端口径（v1.1，critic 复审追加）**：**上述 26 bit 是「NVIDIA 建模后端」的控制位预算**（含 12 bit WAR 槽 + 8 bit mask）。
+> **⚠ 后端口径（v1.1，critic 复审追加；v1.2 修正数字）**：**上述 24 bit 是「NVIDIA 建模后端」的控制位预算**（含 3 bit WAR 槽 id + 6 bit mask）。
 > **新 ISA 前端配置下的控制块是 21 bit（向量）/ 16 bit（标量）**（36 号 §4.5.1 / Q-10 / Q-11）—— **不含 WAR 槽**（WAR 由 gap 内 `stall` 表达），**且标量域省掉 `reuse_flags`/`budget_hint`**。
-> ⇒ **两者不冲突，但落位方案也不同**：NV 后端取 `reserved_hdr` 1 B 装 26 bit；新 ISA 后端只需 21 bit ⇒ **同一字节可容纳**，但**掩码语义与 WAR 处理不同** ⇒ 实现时**不得把两个后端的位定义混用**。
+> ⇒ **两者不冲突，但落位方案也不同**：NV 后端取 `reserved_hdr` 1 B 装 **24 bit**；新 ISA 后端只需 **21 bit** ⇒ **同一字节可容纳**，但**槽数（6 vs 8）、掩码宽度（6 vs 8）、WAR 处理（计数器 vs gap-stall）三者都不同** ⇒ 实现时**不得把两个后端的位定义混用**。
 > **禁止**的做法：扩 `IssueToExecBundle` / `WritebackToRegFileBundle`（跨仓 HSK-9 size 约束，33 号文档 §8.4 已列）。
 
 ### 6.2 每 warp 状态
@@ -482,14 +493,14 @@ public:
 
 > **命名更正（v1.1）**：本文 v1.0 用 `D-1..D-4`，与 [36 号](./36-new-isa-dependence-layer-design.md) §4 的三条**不变式 D-1/D-2/D-3** 撞名。
 > v1.1 起本文改用 **`Q-M1..Q-M4`**（M = Modeling）；**ISA 设计参数的编号 `Q-1..Q-9` 专属 36 号 §7**，两文档不共用编号，避免歧义。
-> 唯一跨文档对应：**本文 `Q-M1` ≡ [36 号](./36-new-isa-dependence-layer-design.md) `Q-1`（WAR 槽是否分开）**。
+> 唯一跨文档对应：**本文 `Q-M1` ≡ [36 号](./36-new-isa-dependence-layer-design.md) `Q-1`（WAR 槽是否分开）**。⚠ **v1.2 限定**：36 号 **Q-1 已被 Q-11 取代**（新 ISA 域取消 WAR 槽）⇒ **Q-M1 的裁决只适用于「NVIDIA 建模后端」**，新 ISA 域见 ADR-SOC-28。
 
 | # | 问题 | 裁决 / 状态 | 影响 |
 |---|------|-----------|------|
-| **Q-M1** | WAR 槽与 SB 槽是否物理合并？（= 36 号 Q-1） | ✅ **裁决：分开** | `WAR[2]×6 = 12 bit/warp` **独立占用**；面积见 §4.2 |
+| **Q-M1** | WAR 槽与 SB 槽是否物理合并？（= 36 号 Q-1，**仅 NV 建模后端**；36 号 Q-1 已被 Q-11 取代） | ✅ **裁决：分开** | `WAR[2]×6 = 12 bit/warp` **独立占用**；面积见 §4.2 |
 | **Q-M2** | CDNA 后端的 TLB scoreboard 深度 | ⏳ **仍未决**（无一手来源；"4/6/8-deep" 无法证实） | 仅影响 CDNA 后端建模精度，不阻塞 NV 后端 |
 | **Q-M3** | AMD `s_waitcnt` 占 issue 槽是否显式建模 | ⏳ **仍未决** | 影响 CDNA 后端 IPC 精度 |
-| **Q-M4** | 控制位落位：取 `reserved_hdr` 1 B，还是另开 SM 内部旁路 | ⏳ **仍未决**（跨仓 HSK 流程） | 位宽已更新为 **26 bit**（8 槽 mask，**NV 后端**）；**新 ISA 后端为 21/16 bit**（36 号 §4.5.1） |
+| **Q-M4** | 控制位落位：取 `reserved_hdr` 1 B，还是另开 SM 内部旁路 | ⏳ **仍未决**（跨仓 HSK 流程） | 位宽已更新为 **24 bit**（**NV 后端**：6 槽 ⇒ mask 6 bit）；**新 ISA 后端为 21/16 bit**（36 号 §4.5.1） |
 
 > **新 ISA 相关的参数**（槽数 / 编码宽度 / `D_mem` / `L_w` / 显式-隐式提示）**不在本文范围**——它们是 ISA 设计决策，见 [36 号](./36-new-isa-dependence-layer-design.md) §7 的 **Q-2..Q-6（均已裁决）**。
 
