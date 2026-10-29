@@ -139,7 +139,7 @@
 ├────────────────────────────────────────────────────────────────────────────┤
 │ ②  自研 LLVM 后端（fork AMDGPU 起步）                                       │
 │     TableGen 描述（SOP*/VOP* 风格）+ 6 个关键 pass（§5）                    │
-│     产出：新 ISA 的目标码 + **36 号 E-1..E-4 的 26 bit 依赖控制位**          │
+│     产出：新 ISA 的目标码 + **依赖控制块（向量 21 / 标量 16 bit，36 号 §4.5.1）** │
 ├────────────────────────────────────────────────────────────────────────────┤
 │ ③  PTX-EMU（功能黄金模型 / golden model）                                    │
 │     同一份 PTX → ① 产出新 ISA 码 → 本仓 SM 模拟器执行                      │
@@ -225,7 +225,7 @@
 |------|:---:|:---:|---|---|
 | **stall count**（E-1） | 4 | 4 | `生产者延迟 − 生产者与首个消费者之间的指令数`（36 号 E-14 查询表提供延迟）；**并承担 late-addr 类的 WAR 保护**（36 号 Q-11） | 🔴 **程序结果错误** |
 | **dep slot id + wait mask**（E-2） | 3 + 8 | 3 + 8 | 为可变延迟生产者分配槽；消费者填 mask（**mask 只覆盖 SB[8]**） | 🔴 读到陈旧值 / 假阻塞 |
-| ~~WAR slot id~~ | **0** | **0** | **v1.1 删除**：36 号 Q-11 证明 WAR 可用写者 `stall` 表达（`D_mem − L_w = 7 ≤ 15`）⇒ **不需要专用槽、不需要编码位** | — |
+| ~~WAR slot id~~ | **0** | **0** | **v1.1 删除**：36 号 Q-11 证明 WAR 可用 **gap 内** `stall` 表达（`d + Σ ≥ 8`，`D_mem − L_w,min = 7 ≤ 15`）⇒ **不需要专用槽、不需要编码位** | — |
 | **reuse flags + budget hint**（E-3） | 3 + 2 | **0** | **哪些源操作数可复用** + **会被消费几次**（仅 VGPR/MCOS 语义） | 🟡 **仅性能**（36 号 A-1/A-2 兜底）✅ |
 | **width hint**（E-3） | **0（opcode 变体）** | **0** | 由窄值算术的 **opcode 变体**承载（36 号 Q-10） | 🟡 仅性能 |
 | **late-addr 标注**（36 号 Q-9） | **0（opcode 变体）** | — | 地址依赖能否在 `D_mem = 4` 内就绪 | 🟡 性能（地址链 kernel） |
@@ -239,7 +239,7 @@
 | 算法 | 输入 | 输出 | 难度 |
 |------|------|------|:----:|
 | **A-1 延迟填充** | 指令序列 + E-14 查询表 | 每条指令的 stall count | 🟢 易 |
-| **A-2 槽分配** | 依赖图 | SB 槽 id + wait mask + WAR 槽 id | 🟡 中（**域标记约束**：38 号 I-4） |
+| **A-2 槽分配** | 依赖图 | SB 槽 id + wait mask（**无 WAR 槽**：36 号 Q-11 / 40 号 S-DEP-6） | 🟡 中（**域标记约束**：38 号 I-4） |
 | **A-3 复用/宽度提示** | 数据流 + 复用分析 | reuse flags + budget hint + width hint | 🟡 中 |
 | **A-4 late-addr 判定** | 地址依赖分析 | late-addr 位 | 🟢 易 |
 
@@ -313,7 +313,7 @@
 | **MGPUSim 只跑 GCN3，不消费 PTX** | `sarchlab/mgpusim` README 原文 |
 | **AMDGPU 的 6 个关键 pass** | `SIISelLowering.cpp:31`、`SIInstrInfo.cpp:8341,7331`、`SIFixSGPRCopies.cpp:10`、`GCNRegBankReassign.cpp`、`SIInsertWaitcnts.cpp`、`AMDGPUTargetMachine.cpp:1717-1807` |
 | **LLVM 新 target 所需最小集** | LLVM 官方文档《Writing an LLVM Backend》《CodeGenerator》 |
-| **36 号的 26 bit 依赖控制位** | [`36-…`](./36-new-isa-dependence-layer-design.md) §4.5 |
+| **36 号的依赖控制块（向量 21 / 标量 16 bit）** | [`36-…`](./36-new-isa-dependence-layer-design.md) §4.5.1 |
 
 ---
 

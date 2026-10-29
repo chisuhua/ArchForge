@@ -8,7 +8,10 @@
 > **⚠ 适用域（v0.5 补充）**: **本文的全部量化结论（`W` / IPC / MCOS / ERW / WABR）均为【向量域】结论**（基于 VGPR + 3 源 FFMA）。引入**独立标量域**（SGPR + 独立标量运算单元）后，标量域**不适用**本文的 `W = 2` 带宽模型（标量域 2 源 vs 2 供给 ⇒ 无缺口）⇒ **标量域需独立参数与独立评估**，见 [`38-…`](./38-new-isa-dual-domain-structure.md) §5。
 > **配套分析附录**: [`34-sm-operand-supply-ipc-timing-analysis.md`](./34-sm-operand-supply-ipc-timing-analysis.md) — **IPC 与时序分析**（IPC 模型 / 3 源 vs 2 源序列对比 / cycle 坐标时序图 / W 口径敏感性）。**本文的 §4.1.4 / §4.2 / §6 的量化结论均以该附录为推导依据**；两者口径冲突时以该附录的推导为准并回写本文。
 > **配套架构方案**: [`35-sm-dependence-management-architecture.md`](./35-sm-dependence-management-architecture.md) — **五类依赖的统一框架与双后端**（RAW / WAR / WAW / 内存依赖 / 控制同步；四层分离；NV + CDNA 双后端；控制位与面积预算；CppTLM 落地映射）。**§5 的依赖规范条款以该文档为准**。
-> **配套 ISA 设计**: [`36-new-isa-dependence-layer-design.md`](./36-new-isa-dependence-layer-design.md) — **新 ISA 依赖层设计方案**（候选架构比较 + 推荐方案 E：源锁存窗口不变式 ⇒ WAR 整类消失 / 依赖状态 ∝ 在飞生产者数 / 复用提示语义化）。**若本仓推进新 ISA，本文 §5 的依赖条款需按 36 号重新裁决**。
+> **配套 ISA 设计**: [`36-new-isa-dependence-layer-design.md`](./36-new-isa-dependence-layer-design.md) — **新 ISA 依赖层设计方案**（候选架构比较 + 推荐方案 E：源锁存窗口不变式 ⇒ WAR 收缩 / 依赖状态 ∝ 在飞生产者数 / 复用提示语义化）。
+> **⚠⚠ 后端适用范围（v0.5 补充，critic 复审追加）**：**本文 §5 的依赖规范条款（C-5 / C-8 等）只适用于「NVIDIA 行为基线建模后端」**（35 号 §3 的 NV 后端 / CppTLM 对标 NVIDIA 的实现路径）。**新 ISA 前端配置下不适用** —— 新 ISA 的 WAR 由 [`40-new-isa-spec-skeleton.md`](./40-new-isa-spec-skeleton.md) §4.5 **S-DEP-6** 覆盖（**不设 WAR 计数器**，改由 gap 内 `stall` 表达），依赖面积口径也随之改变（0.037% → **不适用**）。
+> **⇒ 本文 §12 V13「WAR 计数器落地」是 NV 后端的实施阻塞项，不是新 ISA 的。** 新 ISA 机器**不得**实现 WAR 计数器（40 号 S-DEP-6 明确禁止"顺手加一个"）。
+> **⇒ 本文 C-5 / C-8 与 36 号 Q-11 并非矛盾**：二者作用于**两台不同的机器**（建模宿主 vs 新 ISA）。**引用时必须带后端限定词。**
 > **配套 ISA 总纲**: [`37-new-isa-design-charter.md`](./37-new-isa-design-charter.md) — **新 ISA 设计总纲**（Q-8 取代关系：新 ISA 为本仓 GPGPU 唯一 ISA，PTX/CDNA/SASS 降级为参考；ISA 范围 v1–v3；**编译器硬依赖**；连锁后果清单）。
 > **配套 ISA 结构与编译器**: [`38-new-isa-dual-domain-structure.md`](./38-new-isa-dual-domain-structure.md)（**标量/向量双域结构**，借鉴 CDNA 的 SOP*/VOP* 风格）与 [`39-new-isa-compiler-backend.md`](./39-new-isa-compiler-backend.md)（**PTX/LLVM 前端 → 自研 ISA 的编译器后端方案**）。
 > **定位说明**:
@@ -788,10 +791,10 @@ Execute(i) 的准入条件 = (cycle ≥ issue(i) + L) AND (所有源已就绪)
 
 | 规则 | 内容 | 与 NVIDIA 实测的对应 |
 |------|------|------------------|
-| **C-5（WAR 依赖计数器，读源时释放）** | 每 warp 维护 **WAR 计数器**：消费者在 `issue` 拍**递增**其"正在读取的源寄存器"计数器，**在读完源操作数（`issue+2`）时递减**；生产者（写回端）在写该寄存器前**检查该计数器非零则等待**。⇒ 消费者读到**旧值**（程序序正确），生产者被阻塞而非消费者 | 原文：「For WAR hazards, the mechanism is similar, with the only difference being that **the counter is decreased after the instruction reads its source operands**, instead of decreasing the counter at write-back」；「**Clearing WAR dependencies after reading the source operands is an important optimization**, since source operands are sometimes read much earlier than the result is produced, especially for memory instructions」 |
+| **C-5（WAR 依赖计数器，读源时释放）**〔**仅 NV 建模后端**；新 ISA 见 40 号 S-DEP-6〕 | 每 warp 维护 **WAR 计数器**：消费者在 `issue` 拍**递增**其"正在读取的源寄存器"计数器，**在读完源操作数（`issue+2`）时递减**；生产者（写回端）在写该寄存器前**检查该计数器非零则等待**。⇒ 消费者读到**旧值**（程序序正确），生产者被阻塞而非消费者 | 原文：「For WAR hazards, the mechanism is similar, with the only difference being that **the counter is decreased after the instruction reads its source operands**, instead of decreasing the counter at write-back」；「**Clearing WAR dependencies after reading the source operands is an important optimization**, since source operands are sometimes read much earlier than the result is produced, especially for memory instructions」 |
 | **C-6（MCOS 命中优先于 RF 读）** | 消费者在 `issue` 拍命中 MCOS 槽时，取**槽值**（= 写回当拍写入的值）；该值在 `issue` 拍**确定并交付**，不随之后续 INVALIDATE 改变 | OSF 特有（MCOS 侧）；与 NVIDIA 的"消费者不被延后（bypassing）"一致 |
 | **C-7（写回不阻塞在飞读）** | 写回与在飞读同拍发生**不产生端口冲突**（读写端口独立，方向不同） | 「each register file bank has a dedicated write port of 1024 bits」；写冲突由 result queue 吸收 |
-| **C-8（面积代价）** | WAR 计数器：每 warp 2 个 × 6 bit = **12 bit/warp** → 64 warp/SM = **768 bit/SM ≈ 0.037% RF**（对比 v0.4 值锁存方案 ≈ 1.2% RF，**降低约 30×**） | NVIDIA 全套控制字 41 bit/warp = **0.09% RF** |
+| **C-8（面积代价）**〔**仅 NV 建模后端**〕 | WAR 计数器：每 warp 2 个 × 6 bit = **12 bit/warp** → 64 warp/SM = **768 bit/SM ≈ 0.037% RF**（对比 v0.4 值锁存方案 ≈ 1.2% RF，**降低约 30×**） | NVIDIA 全套控制字 41 bit/warp = **0.09% RF** |
 
 > **C-5 的代价（诚实标注）**：**写者可能被读者阻塞**——若消费者的源读迟迟不发生（e.g. 它自己被前面的依赖卡住），生产者要一直等。NVIDIA 真实硬件**就是这个行为**（写回端等计数器归零），且由编译器排程规避（把长延迟读挪到独立指令序列）。OSF 采纳同一取舍：**正确性优先，且与实测硬件一致**。
 >
@@ -998,7 +1001,7 @@ v0.1 用一个 `invalidation: read_once | on_write` 键混装了**两个正交�
 | **R10** | ~~读带宽供给 `W` 口径未裁决~~ | — | ✅ **v0.5 关闭**：裁决 `W = 2`（§3.1.1 三条论据：面积 / RFC 存在性 / 峰值可达性分析）。`W=3` 不采纳（需第 3 组 1024-bit 读写口，§10 已否决） |
 | **R11** | **显式偏离 Ampere 两条实测语义**（§4.1.2 推论对照表）：① "任意读请求打到同 `(bank, op_pos)` 即失效（无论命中与否）" OSF **未实现**；② "消费者重置 `.reuse` 即 re-arm" OSF **不可表达** | ① 只会**多命中**（更保守，不会错值）但与现状**行为不一致**；② 消费者数 N 运行时才确定时**无法复用** | ① 作为**有意的偏离**登记（保留槽更久 = 语义安全方向）；② 由 `budget_hint` 承载，**hint 少给→miss、多给→驻留变久**（均只是性能问题，见 §4.1.5 护栏）。**必须在实现期做行为差分测试**（§12 V11） |
 | **R12** | **自适应预算是极限环而非稳态**（§4.1.3c 收敛性）：`budget` 在 1 ↔ `budget_max` 之间周期振荡 | 性能：平均 budget 介于两者之间，**低于**理论上限；不影响正确性 | 显式登记，避免实现方按"第 4 次进入稳态"实现；如需真稳态需加迟滞状态（额外面积）→ §12 V7 调参时一并评估 |
-| **R13** | **WAR 语义需依赖计数器**（§5.1 C-5，v0.5 改）：per-warp WAR 计数器，**读源时释放** | 面积 ≈ **0.037% RF**（12 bit/warp × 64 warp）；**写者可能被读者阻塞**（与 NVIDIA 实测同构） | 与 §4.1.6 的槽面积成本**分开记账**；写回端需实现"等 WAR 计数器归零"（依赖 §12 V13 的写回时序建模） |
+| **R13** | **WAR 语义需依赖计数器**（§5.1 C-5，v0.5 改）：per-warp WAR 计数器，**读源时释放**〔**仅 NV 建模后端**〕 | 面积 ≈ **0.037% RF**（12 bit/warp × 64 warp）；**写者可能被读者阻塞**（与 NVIDIA 实测同构） | 与 §4.1.6 的槽面积成本**分开记账**；写回端需实现"等 WAR 计数器归零"（依赖 §12 V13 的写回时序建模） |
 | **R14** | **`W = 2` 下 IPC = 1.000 不是自动达成**（§4.1.4c）：必须有复用机会 + `budget_hint` 正确 + 剩余源跨 bank | **无复用机会的负载恒停在 IPC 0.667**（如寄存器压力极大的标量代码） | 硬件无法弥补——**编译器是唯一能创造复用机会的主体**（I3）。故 MCOS 的 `budget_hint` 与编译器寄存器分配必须协同设计；§8.2 P3 的 profiling 须专门统计"3 源指令的复用命中率" |
 
 ### 开放问题（需评审裁决）
@@ -1202,7 +1205,7 @@ v0.1 用一个 `invalidation: read_once | on_write` 键混装了**两个正交�
 | ~~**V10**~~ | ~~ALU 流水线深度 `d` 的裁决~~（开放项 O-2） | 架构裁决 | ✅ **v0.5 已裁决 `d = 1`**（§4.4.1b）；**并更正上游「5/6/7」误读**（SYNTHESIS §1 + 两处 overview 已回写标注） | **完成** |
 | **V11** | **OSF 与 Ampere RFC 的行为差分测试**（风险 R11） | 验证 | 针对"任意读即失效"与"消费者 `.reuse` re-arm"两条**有意偏离**，构造差分用例（miss-then-match 序列、producer→N consumer 链），确认 OSF 只在**性能**维度偏离、**值语义**恒等 | build / verifier |
 | ~~**V12**~~ | ~~WAR 定序规则的成本复核~~（开放项 O-3 / 风险 R13） | 面积 | ✅ **v0.5 已裁决：采用 per-warp WAR 依赖计数器（读源时释放）**，面积 ≈ 0.037% RF（v0.4 的值锁存方案 ≈ 1.2% RF，**降低 30×**）；**新增 §5.2 五类依赖机制对照** | **完成** |
-| **V13** | **写回时序建模 + WAR 计数器落地** | 实现 | CppTLM 现状：`WritebackUnit::enqueue()` **全仓无调用点** ⇒ 「按延迟占用 → 写回」尚未生效；`HazardTracker` **无 WAR / WAW**。C-5 要求写回端「等 WAR 计数器归零」⇒ 必须先把写回时序真正建模起来，并为 WAR 计数器补状态与接口 | build（P2 实施前） |
+| **V13** | **写回时序建模 + WAR 计数器落地**〔**仅 NV 建模后端**；新 ISA 后端不实现 WAR 计数器，见 40 号 S-DEP-6〕 | 实现 | CppTLM 现状：`WritebackUnit::enqueue()` **全仓无调用点** ⇒ 「按延迟占用 → 写回」尚未生效；`HazardTracker` **无 WAR / WAW**。C-5 要求写回端「等 WAR 计数器归零」⇒ 必须先把写回时序真正建模起来，并为 WAR 计数器补状态与接口 | build（P2 实施前） |
 | **V14** | **3 源指令的复用命中率统计** | 编译期数据 | R14：`W = 2` 下 IPC 1.000 **依赖复用机会存在**。须统计真实 kernel 中「3 源指令至少 1 个操作数可被复用」的比例；若普遍 < 1/3，则 MCOS 的 IPC 收益假设不成立，须重新评估 | build（P3 前） |
 
 ---

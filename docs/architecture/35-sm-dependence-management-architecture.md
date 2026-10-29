@@ -1,6 +1,6 @@
 # SM 依赖管理架构方案：五类依赖的统一框架与双后端
 
-> **版本**: v1.0 DRAFT — 2026-10-28
+> **版本**: v1.1 DRAFT — 2026-10-28（v1.0 初版；**v1.1 = 回应 critic 复审：WAR 槽方案补「仅 NV 建模后端」适用范围** —— §1.2 判据表 / §3.2 L1 状态表 / §4.2 WAR 槽设计 / §6 控制位落位 / §7.3 flush 语义（**新 ISA 后端的 WAR 由 40 号 S-DEP-6 的 gap-`stall` 机制覆盖，不设 WAR 槽**）；版本号与 §9 的「命名更正（v1.1）」对齐）
 > **状态**: 🟡 **架构方案**（派生自 [`33-sm-operand-supply-design-target.md`](./33-sm-operand-supply-design-target.md) v0.5；**非当前实现**；未经 Oracle/ADR 评审）
 > **Owner**: CppTLM Team
 > **文档分类**: 第 1 层 · 架构方案（SM 依赖管理层）
@@ -29,7 +29,7 @@
 | **②** | **四层分离**：L1 依赖层 / L2 资源层（端口、bank、FU —— **不是依赖**）/ L3 内存序层 / L4 控制层。**跨层不合并**是 OSF 的扩展不变式 | §2 |
 | **③** | **混合的正确位置 = 后端，不是依赖类型**。NV/PTX 后端（Stall counter + SB0-5 + DEPBAR）与 CDNA 后端（TLB scoreboard + vmcnt/lgkmcnt/expcnt + s_waitcnt）并存；**学术口径只作建模对照/回归校验，不作实现目标** | §3 |
 | **④** | **WAR 用「读源时释放」的计数器**：读者 issue 时递增、**读完源时递减**；写者等归零。面积 ≈ **12 bit/warp**，比"值锁存"方案低 30× | §4.2 |
-| **⑤** | **控制位预算 26 bit/指令**（8 槽 ⇒ mask 8 bit）：`CtrlBits::reserved_ctrl0/1` 只有 16 bit → **差 10 bit**；解法是取 `InstrDescriptor::reserved_hdr` 的 **1 字节**（**不改变 128 字节布局**） | §6 |
+| **⑤** | **控制位预算 26 bit/指令**〔**NV 建模后端**；新 ISA 后端为 **21/16 bit**，见 §6 注〕（8 槽 ⇒ mask 8 bit）：`CtrlBits::reserved_ctrl0/1` 只有 16 bit → **差 10 bit**；解法是取 `InstrDescriptor::reserved_hdr` 的 **1 字节**（**不改变 128 字节布局**） | §6 |
 | **⑥** | **MCOS 的复用提示是"fail-safe"的**：提示错 ⇒ 命中/未命中变化 ⇒ **性能问题**，**不可能产生错误值**（tag 精确匹配 + C-3 写回失效兜底） | §7.2 |
 
 ---
@@ -62,13 +62,13 @@
 |------|---------|-----------|---------|
 | RAW（定长 ALU） | `issue(consumer) ≥ issue(producer) + latency` | ✅ **可知**（latency 是 ISA 常量） | **编译器**（Stall counter / scoreboard 静态等待） |
 | WAW | 前一次写回完成 | ✅ 可知 | 同 RAW |
-| **WAR** | **读者取走源值的那一拍** | ❌ **不可知**（读者何时真正读到是运行时） | **硬件计数器**（读源时释放） |
+| **WAR** | **读者取走源值的那一拍** | ❌ **不可知**（读者何时真正读到是运行时） | **硬件计数器**（读源时释放）〔**NV 建模后端**；新 ISA 后端改用 gap 内 `stall`，见 40 号 S-DEP-6〕 |
 | RAW（可变延迟：内存 / SFU） | 访存完成 | ❌ 不可知 | **硬件计数器**（SB / vmcnt） |
 | 控制 / 同步 | 到达 barrier | ✅ 静态 | **控制单元**（mask / B register） |
 
 > **这条判据解释了 NVIDIA 的全部设计选择**：
 > - 定长 ALU 依赖 → 硬件**不检查 RAW**（「the hardware does not check for RAW hazards, and simply relies on these compiler-set counters」）→ 省掉 scoreboard 的 5.32% RF 面积。
-> - WAR 与可变延迟依赖 → 硬件**必须**有计数器（一个 6-bit 计数器 + 3-bit id + 6-bit mask 就够）。
+> - WAR 与可变延迟依赖 → 硬件**必须**有计数器（一个 6-bit 计数器 + 3-bit id + 6-bit mask 就够）。〔**NV 建模后端**〕**新 ISA 后端不适用**：其 WAR 由编译期可算的 **gap 内 `stall`** 表达（36 号 §4.1.6 / 40 号 S-DEP-6），不需要硬件计数器。
 
 ### 1.3 五类依赖的定义（本方案覆盖范围）
 
@@ -98,7 +98,7 @@
 │    放行判据：计数器归零 / 显式 waitcnt 触发                                    │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ L1 依赖层：寄存器 RAW / WAR / WAW  ★ 本方案主体                                │
-│    状态：per-warp stall_cnt + SB[6] + WAR 槽                                  │
+│    状态：per-warp stall_cnt + SB[6] + WAR 槽 〔NV 建模后端；新 ISA 后端无 WAR 槽〕 │
 │    放行判据：stall_cnt == 0 ∧ ∀ sb ∈ wait_mask: SB[sb] == 0                   │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ L2 资源层：RF 读/写端口、bank 槽位、FU 输入 latch、issue 槽位                │
@@ -226,6 +226,10 @@
 | **失败模式** | mask 漏置 ⇒ 读到陈旧值；mask 多置 ⇒ 假阻塞 |
 
 ### 4.2 WAR（反依赖）—— **本方案的关键设计**
+
+> **⚠ 适用范围（v1.1，critic 复审追加）**：**本节的 WAR 槽机制只属于「NVIDIA 行为基线建模后端」**（本仓对标 NVIDIA 的实现路径，33 号 C-5 / C-8 / V13 依赖它）。
+> **新 ISA 前端配置下不适用** —— 新 ISA 的 WAR 由 [`40-new-isa-spec-skeleton.md`](./40-new-isa-spec-skeleton.md) §4.5 **S-DEP-6** 覆盖：**不设 WAR 计数器 / WAR 槽**，改由 gap 内 `stall` 表达（36 号 §4.1.6 推导）。
+> **⇒ 本节是「建模口径」，不是「新 ISA 的依赖层规范」。**
 
 #### 4.2.1 问题
 
@@ -359,6 +363,10 @@ I2 发射 │      │      │      │      │      │      │      │ I2 
 
 > ⚠ **超出 `CtrlBits` 现有余量**：`CtrlBits` 共 4 字节，其中 `reserved_ctrl0/1` = **16 bit** ⇒ **差 8 bit**。
 > **解法（不动跨仓 bundle 布局）**：从 `InstrDescriptor::reserved_hdr`（4 B，位于 header 内，实测 offset 4）取 **1 字节** ⇒ 合计 **26 bit**（8 槽 mask 8 bit），**`sizeof(InstrDescriptor)` 仍为 128**（实测确认），剩余 3 B 仍可回收。
+>
+> **⚠ 后端口径（v1.1，critic 复审追加）**：**上述 26 bit 是「NVIDIA 建模后端」的控制位预算**（含 12 bit WAR 槽 + 8 bit mask）。
+> **新 ISA 前端配置下的控制块是 21 bit（向量）/ 16 bit（标量）**（36 号 §4.5.1 / Q-10 / Q-11）—— **不含 WAR 槽**（WAR 由 gap 内 `stall` 表达），**且标量域省掉 `reuse_flags`/`budget_hint`**。
+> ⇒ **两者不冲突，但落位方案也不同**：NV 后端取 `reserved_hdr` 1 B 装 26 bit；新 ISA 后端只需 21 bit ⇒ **同一字节可容纳**，但**掩码语义与 WAR 处理不同** ⇒ 实现时**不得把两个后端的位定义混用**。
 > **禁止**的做法：扩 `IssueToExecBundle` / `WritebackToRegFileBundle`（跨仓 HSK-9 size 约束，33 号文档 §8.4 已列）。
 
 ### 6.2 每 warp 状态
@@ -412,6 +420,10 @@ I2 发射 │      │      │      │      │      │      │      │ I2 
 > ⚠ **但 WAR / RAW 的提示仍是"正确性提示"**（F-1/F-2/F-3）——这部分的编译器责任**无法用硬件兜底**，必须靠差分测试。
 
 ### 7.3 分支 flush 与 WAR 槽的交互（实现注意项）
+
+> **⚠ 适用范围（v1.1，critic 复审追加）**：本节讲的是 **WAR 槽**的 flush 语义 ⇒ **只适用于「NVIDIA 建模后端」**。
+> **新 ISA 后端没有 WAR 槽**（WAR 由 gap 内 `stall` 表达）⇒ **本节的「强制清零」要求对新 ISA 不适用**；新 ISA 的对应问题是「**flush 后 gap 内累计的 `stall` 是否仍然有效**」——由于 `stall` 是**编译期常量**、与运行时是否执行无关 ⇒ **flush 丢弃指令不会产生悬挂计数**，该问题**自动消失**。
+
 
 ERW 的分支 flush 会丢弃已预取但可能不执行的源值。**若被丢弃的指令已递增了 WAR 槽而其"读完源"事件永不发生 ⇒ 写者永久阻塞。**
 
@@ -477,7 +489,7 @@ public:
 | **Q-M1** | WAR 槽与 SB 槽是否物理合并？（= 36 号 Q-1） | ✅ **裁决：分开** | `WAR[2]×6 = 12 bit/warp` **独立占用**；面积见 §4.2 |
 | **Q-M2** | CDNA 后端的 TLB scoreboard 深度 | ⏳ **仍未决**（无一手来源；"4/6/8-deep" 无法证实） | 仅影响 CDNA 后端建模精度，不阻塞 NV 后端 |
 | **Q-M3** | AMD `s_waitcnt` 占 issue 槽是否显式建模 | ⏳ **仍未决** | 影响 CDNA 后端 IPC 精度 |
-| **Q-M4** | 控制位落位：取 `reserved_hdr` 1 B，还是另开 SM 内部旁路 | ⏳ **仍未决**（跨仓 HSK 流程） | 位宽已更新为 **26 bit**（8 槽 mask） |
+| **Q-M4** | 控制位落位：取 `reserved_hdr` 1 B，还是另开 SM 内部旁路 | ⏳ **仍未决**（跨仓 HSK 流程） | 位宽已更新为 **26 bit**（8 槽 mask，**NV 后端**）；**新 ISA 后端为 21/16 bit**（36 号 §4.5.1） |
 
 > **新 ISA 相关的参数**（槽数 / 编码宽度 / `D_mem` / `L_w` / 显式-隐式提示）**不在本文范围**——它们是 ISA 设计决策，见 [36 号](./36-new-isa-dependence-layer-design.md) §7 的 **Q-2..Q-6（均已裁决）**。
 
