@@ -98,7 +98,7 @@
 | Fermi | 4 bank × 8 sub-bank × 128-bit（128 KB/SM） | 1 值/bank/cycle | 4 个 CU（CU0–CU3） | — | OC 内串行化 |
 | Maxwell / Pascal | 4 bank × 32-bit | 1 值/bank/cycle | — | 4 个 reuse cache + 4 个 8-byte slot | 只能靠 reuse 缓解 |
 | **Volta** | **2 bank × 64-bit**（`bank = reg_index % 2`） | 2 值/bank/cycle | **0** | 同上 | 3 源同 bank 才冲突 |
-| **Ampere / Turing** | **2 bank / sub-core** | **1 × 1024-bit 读口 + 1 × 1024-bit 写口 / bank** | **0** | 每 bank 1 entry × 3 操作数位置 = **6 子条目** | **0/1/2 冲突 → 5/6/7 cycles**（issue 侧气泡） |
+| **Ampere / Turing** | **2 bank / sub-core** | **1 × 1024-bit 读口 + 1 × 1024-bit 写口 / bank** | **0** | 每 bank 1 entry × 3 操作数位置 = **6 子条目** | **0/1/2 冲突 → 5/6/7 cycles**（issue 侧气泡）⚠ **2026-10-28 更正**：**序列 elapsed**，非单条指令的 issue→result 延迟（定长指令依赖延迟实测 = 4） |
 
 **建模启示**（详见 `CudaCore/overview.md` §6）：CppTLM 若建模 SM 操作数供给级，应采用**现代口径**（C），并把"数据冒险（`HazardTracker`）"与"端口争用（独立仲裁器）"**分层**——这与 US7834881B2 专利原文（"scoreboard unit ... avoid writeback conflicts and **cycle based conflicts**"）以及 GPGPU-Sim（Scoreboard 与 OC 互不引用）的分层完全一致。
 

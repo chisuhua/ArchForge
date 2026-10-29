@@ -171,7 +171,7 @@ arXiv:2503.20481 §5.3.1：
 | Maxwell / Pascal | 2 processing block（Pascal GP100） | **32-bit 宽 bank** | **1 value / bank / cycle** | — | **4 个 reuse cache + 4 个 source operand slot**（8-byte slot） | 只能靠 reuse 缓解 | arXiv:1804.06826 §1/§2.1 |
 | **Volta GV100** | **4 processing block**（每 block 1 scheduler + 1 dispatch） | **2 bank × 64-bit**（bank = reg index mod 2） | **64 bit / bank / cycle** | **0（实测否定）** | 4 个 reuse cache + 4 slot | 3 源同 bank → 串行化 | arXiv:1804.06826 §1/§3.5 |
 | **Turing TU10x** | 4 processing block | 2 bank | 每 bank 1 读端口 | **0（实测否定）** | RFC 同 Ampere 形态 | issue 侧气泡 | arXiv:2503.20481（portability 验证） |
-| **Ampere GA10x/A100** | 4 sub-partition | **2 bank** | **1 × 1024-bit 读端口 + 1 × 1024-bit 写端口 / bank** | **0（实测否定）** | **每 bank 1 entry × 3 × 1024-bit = 6 子条目** | 0/1/2 冲突 → **5/6/7 cycles** | arXiv:2503.20481 §5.3 |
+| **Ampere GA10x/A100** | 4 sub-partition | **2 bank** | **1 × 1024-bit 读端口 + 1 × 1024-bit 写端口 / bank** | **0（实测否定）** | **每 bank 1 entry × 3 × 1024-bit = 6 子条目** | 0/1/2 冲突 → **5/6/7 cycles**（⚠ **2026-10-28 更正**：**序列 elapsed**，非单条指令延迟；定长指令依赖延迟实测 = 4） | arXiv:2503.20481 §5.3 |
 | Hopper GH100 | 4 processing block（二手来源） | 未实测 | 未实测 | 未实测 | 未实测 | 未实测 | — |
 | Blackwell GB203/B200 | 4 sub-core | RF 256 KB/SM | 未实测 | 未实测 | 未实测 | 未实测 | arXiv:2507.10789（结构层） |
 

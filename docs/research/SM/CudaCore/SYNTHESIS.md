@@ -27,7 +27,7 @@
 | **Kepler** (2012) | 4 bank × 256 reg | OC + **复用缓存**（6 storage elements + cache table，**写回即失效**） | 同上 | 硬件 cache table | 可变 | 槽位固定 6；容量约束 |
 | **Maxwell / Pascal** (2014-16) | 4 bank × 32-bit，**1 值/bank/cycle** | OC（保留） | **分配无法消除**，只能缓解 | **编译器 `.reuse`**（4 cache + 4 slot，8-byte 粒度） | 可变 | 编译器负担；**跨 warp 切换使 reuse 全失效（+1 拍）** |
 | **Volta** (2017) | **2 bank × 64-bit**（`bank = reg_index % 2`） | OC 保留，但 64-bit bank 使同 bank 可取 2 值 | 3 源同 bank 才冲突；**分配可部分消除** | 同上（4 reuse cache + 4 slot） | 可变 | **放弃双发射**（每 block 只剩 1 dispatch unit） |
-| **Turing / Ampere** (2018-20) | **每 sub-core 2 bank**；每 bank **1×1024-bit 读口 + 1×1024-bit 写口** | **OC 被废除**：**定长 3 周期**读源 + **Allocate 级端口预约** + result queue + bypassing | **issue 侧气泡**：0/1/2 冲突 → 5/6/7 cycle | **RFC**：每 bank 1 entry × 3 操作数位置 = **6 子条目**，编译器 `.reuse` 管理，**读一次即失效** | **定长**（编译期已知） | 3 周期窗口对 2 源指令浪费带宽；**依赖管理从硬件 scoreboard 挪到编译器控制位** |
+| **Turing / Ampere** (2018-20) | **每 sub-core 2 bank**；每 bank **1×1024-bit 读口 + 1×1024-bit 写口** | **OC 被废除**：**定长 3 周期**读源 + **Allocate 级端口预约** + result queue + bypassing | **issue 侧气泡**：0/1/2 冲突 → 5/6/7 cycle（⚠ **2026-10-28 更正**：5/6/7 是论文 Listing 1 那 **6 条指令序列的 elapsed**（5 = 每 sub-core 每拍发 1 条的下界；6/7 = 冲突多出的 1/2 拍**气泡**），**不是**单条指令的 issue→result 延迟——原文：「two consecutive instructions can have from 0 to 2 cycles of bubbles in between」。**定长指令的依赖延迟实测为 4**（论文 §4）） | **RFC**：每 bank 1 entry × 3 操作数位置 = **6 子条目**，编译器 `.reuse` 管理，**读一次即失效** | **定长**（编译期已知） | 3 周期窗口对 2 源指令浪费带宽；**依赖管理从硬件 scoreboard 挪到编译器控制位** |
 | **Hopper / Blackwell** (2022-25) | 标量路径沿用 Ampere | 标量同 Ampere；**张量路径换血**：`wgmma` → `tcgen05` + **TMEM** | — | — | 定长 | TMEM 把操作数供给**从通用 RF 挪到专用张量内存**——**专用化 > 通用化**的又一次重演 |
 
 ---

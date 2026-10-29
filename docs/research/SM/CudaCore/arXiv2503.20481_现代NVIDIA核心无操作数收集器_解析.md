@@ -235,6 +235,54 @@ IADD3 R10 , R2, R12 , R13 # R2 misses
 
 ---
 
+## 6b. 五类依赖的处理机制（§4）★ 含 WAR 的"读源时释放"机制
+
+> **2026-10-28 补充**（一手原文逐字核对）。本节是 [`33-sm-operand-supply-design-target.md`](../../../architecture/33-sm-operand-supply-design-target.md) §5.2 的证据来源。
+
+### 6b.1 两类计数器
+
+| 计数器 | 数量 / 宽度 | 语义 | 覆盖的依赖 |
+|--------|------------|------|-----------|
+| **Stall counter** | 每 warp 1 个 × **4 bit**（0–15） | 「**the latency of the producing instruction minus the number of instructions between the producer and the first consumer**」；每拍减 1 | **定长 ALU 的 RAW** |
+| **Dependence counters (SB0–SB5)** | 每 warp **6 个** × 6 bit（上限 63） | 生产者 issue 后**递增**某个计数器，消费者等到它归零 | **可变延迟（内存/SFU）的 RAW**；每指令用 **2 个 3-bit 字段**指定递增哪个 + **6-bit mask** 指定等哪些 |
+
+> 「we have verified that if the Stall counter is not properly set, **the result of the program is incorrect since the hardware does not check for RAW hazards**, and simply relies on these compiler-set counters.」
+> 「the incrementing of the Dependence counters is performed **the cycle after issuing** the producer instruction, so it is not effective until one cycle later. Therefore, if the consumer is the next instruction, the producer has to set the Stall counter to **2**.」
+
+### 6b.2 WAR：靠"读源时释放"的计数器 ★★
+
+> 「For **WAR hazards**, the mechanism is similar, with the only difference being that **the counter is decreased after the instruction reads its source operands**, instead of decreasing the counter at write-back.」
+>
+> 「In each instruction, there are some control bits to indicate **up to two counters that are increased at issue**. One of these counters will be **decreased at write-back (to handle RAW and WAW dependencies)** and the other **at register read (to handle WAR dependencies)**.」
+>
+> 「**Clearing WAR dependencies after reading the source operands is an important optimization**, since source operands are sometimes read much earlier than the result is produced, especially for memory instructions. For instance, in this example, instruction 0x80 **waits until instruction 0x70 reads R2** for clearing this WAR dependence, instead of waiting until instruction 0x70 performs its write-back, **which may happen hundreds of cycles later**.」
+
+> **含义（对本专题至关重要）**：**现代 NVIDIA 显式追踪 WAR**，且采用**早释放**策略——读者一旦取走源值，WAR 依赖即解除，写者可继续。
+> **这推翻了"WAR 只能靠值锁存缓冲解决"的假设**：正确做法是 **per-warp 依赖计数器（读源时释放）**，面积 ~12 bit/warp，比"锁存 1024-bit 在飞缓冲"低约 30×。
+> **注意**：可变延迟指令会让"读-写顺序"乱序，这是 WAR 计数器存在的根因（论文原文：「even though issue is in-order, the read-write of operands may occur out-of-order due to variable-latency instructions」）。
+
+### 6b.3 与 AMD 的对比（论文 §4 引 AMD ISA 文档）
+
+> 「each wavefront (warp) has **three or four counters**, with each counter dedicated to specific instruction types and its use is required to protect data hazards created by those instructions. **AMD does not allow regular instructions to wait for a counter to reach zero using control bits, requiring an explicit `waitcnt` instruction instead**, which increases the number of instructions. ... In contrast, NVIDIA's alternative enables more concurrent dependence chains even within the same instruction type, as it has **up to two counters more per warp**, and the counters are **not tied to any instruction type**.」
+>
+> 「**Although AMD does not need software or compiler intervention to avoid data hazards with ALU instructions**, it introduced the **DELAY_ALU** instruction in RDNA 3/3.5 architectures to mitigate pipeline stalls caused by dependencies. Conversely, **NVIDIA depends on the compiler to correctly handle data dependencies** by setting the Stall counter for fixed-latency producers, resulting in a lower instruction count but higher decoding overhead.」
+
+### 6b.4 FU 占用宽度：1 拍（全 warp 宽）vs 2 拍（半 warp 宽）★
+
+> 「Execution units have an input latch that must be free when the instruction reaches the execution stage. **This latch is occupied for two cycles if the width of the execution unit is just half warp, and for one cycle if its width is a full warp.**」
+
+> **含义**：Ampere FP32 FU 为**全 warp 宽** ⇒ **FU 占用 1 拍** ⇒ 配合 3 拍读窗，**定长指令的依赖延迟 = 4**（与 §4 实测值一致）。Volta 的 FP32 单元为半 warp 宽 ⇒ 占用 2 拍。**这解释了跨代的延迟差异，且是"ALU 深度"在现代 GPU 上的确切含义。**
+
+### 6b.5 「5/6/7 cycle」的真身（§3 + Listing 1）★★ 常见误读
+
+> 「Replacing R_X and R_Y by odd numbers (e.g., R19 and R21), we get an elapsed time of **five cycles (the minimum since each sub-core can issue one instruction per cycle)**. If we change R_X to an even number (e.g., R18) while maintaining R_Y odd (e.g., R21), the reported number of cycles is **six**. Finally, the elapsed time is **seven** cycles if we use an even number for both operands ... In summary, **two consecutive instructions can have from 0 to 2 cycles of bubbles in between**, depending on which registers they use.」
+
+> ⚠ **口径澄清（2026-10-28）**：**5/6/7 是 Listing 1 那 6 条指令序列（`CLOCK / NOP / FFMA / FFMA / NOP / CLOCK`）的 elapsed**，其中 5 是下界（每 sub-core 每拍发 1 条）、6/7 是 bank 冲突多出的 1/2 拍**气泡**。
+> **它不是"单条定长指令的 issue→result 延迟"**——后者是 **4**（§4）。
+> ⇒ 引用「5/6/7」时**必须**注明它是"序列 elapsed / 气泡计数口径"，否则会被误读为指令延迟（本仓 `SYNTHESIS.md` 与两处 overview 曾有此误读，已于 2026-10-28 回写标注）。
+
+---
+
 ## 7. 依赖管理：软件 vs 硬件（§7.5，Table 7）
 
 | 机制 | Control bits | Speed-up | Area overhead | MAPE |
