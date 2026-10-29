@@ -71,7 +71,7 @@ v3.3 补入 33（2026-10-27）与 34（2026-10-28）；v3.5 补入 35、v3.6 补
 | [37](./37-new-isa-design-charter.md) | `37-new-isa-design-charter.md` | **新 ISA 设计总纲：定位、范围、参考 ISA 政策与路线图**——Q-8 取代关系（唯一 ISA；PTX/CDNA/SASS 降级为参考）；被取代 / 不被取代的分层；ISA 范围 v1–v3；**编译器硬依赖风险**；连锁后果清单 | 🟡 设计总纲 v1.0（未经评审） |
 | [38](./38-new-isa-dual-domain-structure.md) | `38-new-isa-dual-domain-structure.md` | **新 ISA 标量/向量双域结构：借鉴 CDNA 的 SOP*/VOP* 风格**——CDNA 双域机理剖析（可借鉴 6 条 / 不可照搬 3 条）；SGPR/VGPR + SALU/VALU + SCC/VCC 提案；跨域规则 X-D1..X-D5；依赖层分域适配；**33 号结论的适用域重划** | 🟡 设计方案 v1.0（未经评审） |
 | [39](./39-new-isa-compiler-backend.md) | `39-new-isa-compiler-backend.md` | **新 ISA 编译器后端方案：以 PTX-EMU 子集为约束的 PTX → 自研 ISA**——PTX-EMU 四层解码器与 **10 个硬缺口**；三条路线比较与推荐；**三层分工**（LLVM 前端 + 自研后端 + PTX-EMU 作 golden model）；AMDGPU 可借鉴的 6 个 pass；编译器必须产出的元数据 A-1..A-4；**§5.1 `SIInsertWaitcnts` 迁移率核查（20–30%）→"fork 是最短路径"降级为假设（B-6）** | 🟡 设计方案 v1.1（未经评审） |
-| [40](./40-new-isa-spec-skeleton.md) | `40-new-isa-spec-skeleton.md` | **新 ISA 规范骨架（B-0）**——执行模型（wave 32 / EXEC / 发散栈 + 显式 `JOIN` / `VP[2]` 谓词文件）；架构寄存器（SGPR 128 = 124+4 保留 / VGPR 256）；**编码（`fmt` 8 类、48/64 双长度、8 种形态全部恰好填满、控制块向量 21 / 标量 16 bit）**；依赖层不变式 D-1/D-1′/D-2/D-3；内存模型最小规范；双域规则 X-D1..X-D5；TBD 注册表 T-1..T-9 | 🟡 **规范骨架 v1.0 DRAFT**（冻结前置已闭合，待签批） |
+| [40](./40-new-isa-spec-skeleton.md) | `40-new-isa-spec-skeleton.md` | **新 ISA 规范骨架（B-0）**——执行模型（wave 32 / EXEC / 发散栈 + 显式 `JOIN` / `VP[2]` 谓词文件）；架构寄存器（SGPR 128 = 124+4 保留 / VGPR 256）；**编码（`fmt` 8 类、48/64 双长度、8 形态均不溢出、3 种精准填满、控制块向量 21 / 标量 16 bit）**；依赖层不变式 D-1/D-1′/D-2/D-3；内存模型最小规范；双域规则 X-D1..X-D5；TBD 注册表 T-1..T-9 | 🟡 **规范骨架 v1.0 DRAFT**（冻结前置已闭合，待签批） |
 
 ### D. PCIe 子链路（4 份）
 

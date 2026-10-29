@@ -131,7 +131,7 @@ PTX-EMU（39 号 §1.4）用 CFG post-dominator 计算汇合点 —— 那是**�
 > **判据归属**：**[本仓]** = 本仓（ArchForge，纯文档）即可关闭；**[CppTLM]** = 涉及模拟器 / 汇编器 / 差分测试 / 微基准，**在 CppTLM 仓执行**，本仓只登记关闭证据。
 > 本 ADR 的划分：**本仓** = V1；**CppTLM** = V2、V3、V4、V5、V6、V7。
 
-- [ ] **V1**〔本仓〕：**架构状态清单穷尽** — 验证手段：**双向对拍** = 本 ADR D2 表与 40 号 §1.2 **逐项互查**（两表必须完全一致，且都含「内存可见性状态」）；实现侧清单在 CppTLM 仓另行对拍；责任人：verifier
+- [ ] **V1**〔本仓〕：**架构状态清单穷尽** — 验证手段：**双向对拍** = 本 ADR D2 表与 40 号 §1.2 的**状态集合一致**（同一状态可在本表合并成一行、在 40 号分成多行，**按状态而非按行**比对；两者都须含「内存可见性状态」）；实现侧清单在 CppTLM 仓另行对拍；责任人：verifier
 - [ ] **V2**〔CppTLM〕：**发散/汇合语义正确**（含嵌套） — 验证手段：嵌套发散用例（if/else + 循环 + 早退）的执行轨迹与预期一致；责任人：verifier
 - [ ] **V3**〔CppTLM〕：**`JOIN` 的栈平衡可校验** — 验证手段：汇编器拒绝栈不平衡的 `JOIN` 序列；责任人：build
 - [ ] **V4**〔CppTLM〕：**谓词化语义正确**（`P` 变体 = `EXEC ∧ VP[0]`） — 验证手段：部分 lane 谓词执行的差分测试；责任人：verifier
@@ -143,7 +143,7 @@ PTX-EMU（39 号 §1.4）用 CFG post-dominator 计算汇合点 —— 那是**�
 
 - [`40-new-isa-spec-skeleton.md`](../architecture/40-new-isa-spec-skeleton.md) §1（规范条款）
 - [`39-new-isa-compiler-backend.md`](../architecture/39-new-isa-compiler-backend.md) §1.4（PTX-EMU 的 post-dominator 汇合与三处已知偏差）、B-4（wave 宽度开放项）
-- [`38-new-isa-dual-domain-structure.md`](../architecture/38-new-isa-dual-domain-structure.md) §3.1.1b（`VP[8]` 谓词文件）
+- [`38-new-isa-dual-domain-structure.md`](../architecture/38-new-isa-dual-domain-structure.md) §3.1.1b（`VP[2]` 谓词文件）
 - PTX ISA 9.4 §9.7（`bar.sync` / `vote` / `activemask` 语义 —— **参照对象**）
 
 ---

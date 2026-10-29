@@ -266,7 +266,7 @@ let VALU = 1;   // VOP*/VINTRP/SDWA/DPP 格式类
 | **X-D2** | VALU 的源**可以是 VGPR / SGPR / 字面常量**（SGPR 免费） |
 | **X-D3** | **SGPR ← VGPR 非法**；必须经 `V_READFIRSTLANE_B32`（或等价指令），**计 1 个 VALU 发射槽 + 延迟 + 一条 wait** |
 | **X-D4** | **每指令的 SGPR 源数量有硬上限 = 2**（**v1.1 改论证基础**：依据是 **SALU / VALU 的 SGPR 读端口数**，而不是"VCC 物理在 SGPR 内" —— 后者已被 §3.1.1b 迁出） |
-| **X-D5** | ~~SALU 写 VCC 所在 SGPR 时编译器必须插 wait~~ ⇒ **v1.1 撤销**：VCC 已迁到独立谓词文件 `VP[8]`，该 hazard 不存在。**替代规则**：写 `VP[k]` 的是向量比较类指令（单写者），SALU 不能写 `VP` ⇒ **无跨域写冲突** |
+| **X-D5** | ~~SALU 写 VCC 所在 SGPR 时编译器必须插 wait~~ ⇒ **v1.1 撤销**：VCC 已迁到独立谓词文件 `VP[2]`，该 hazard 不存在。**替代规则**：写 `VP[k]` 的是向量比较类指令（单写者），SALU 不能写 `VP` ⇒ **无跨域写冲突** |
 
 ---
 

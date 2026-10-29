@@ -96,7 +96,7 @@ ArchForge 所在的 CppTLM 项目有**双层 ADR 体系**，两层**严格分离
 | [ADR-SOC-26](./adr/ADR-SOC-26-self-authored-gpu-isa-as-sole-isa.md) | **自研 GPGPU ISA 为本仓唯一 ISA**（取代 CDNA 路线；PTX/CDNA3/SASS 降级为研究参考；取代 ADR-SOC-15 Phase C；ADR-SOC-16 接缝处置） | B-0..B-5（自研 ISA 路线） |
 | [ADR-SOC-27](./adr/ADR-SOC-27-compiler-driven-dependence-management.md) | **依赖管理由编译器静态承担**（不变式 D-1/D-1′/D-2/D-3 + 架构保证 A-1/A-2 + 控制块按域裁剪 21/16 bit + 依赖面积 0.121% RF） | B-0..B-4 |
 | [ADR-SOC-28](./adr/ADR-SOC-28-late-addr-war-via-gap-stall.md) | **late-addr 访存类与 WAR 的 gap-stall 表达**（取消 WAR 计数器/槽；D-1′；实例级义务 W-1..W-3；取代 36 号 Q-1） | B-0 / B-2 / B-3 |
-| [ADR-SOC-29](./adr/ADR-SOC-29-dual-domain-scalar-vector-structure.md) | **标量/向量双域结构与跨域规则**（独立 SGPR/SALU + VGPR/VALU；X-D1..X-D5；VCC 迁出 SGPR 改独立谓词文件 `VP[8]`） | B-0 / B-5 |
+| [ADR-SOC-29](./adr/ADR-SOC-29-dual-domain-scalar-vector-structure.md) | **标量/向量双域结构与跨域规则**（独立 SGPR/SALU + VGPR/VALU；X-D1..X-D5；VCC 迁出 SGPR 改独立谓词文件 `VP[2]`） | B-0 / B-5 |
 | [ADR-SOC-30](./adr/ADR-SOC-30-isa-encoding-48-64-variable-length.md) | **ISA 指令编码**（48/64 bit 变长 + 16-bit 粒度；`fmt` 8 类 × 11-bit opcode；8 种形态恰好填满；控制块按域裁剪） | B-0 / B-2 / B-5 |
 | [ADR-SOC-31](./adr/ADR-SOC-31-simt-execution-model-and-reconvergence.md) | **SIMT 执行模型**（wave 32；架构状态清单；谓词化用 opcode 变体；发散汇合用编译器显式 `JOIN`） | B-0 / B-1 / B-5 |
 
