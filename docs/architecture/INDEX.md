@@ -15,11 +15,11 @@
 | **D. PCIe 子链路** | 16-19, 19a | PCIe EP + SDMA + 入口 + 17 端口 IP 微架构 + 驱动可见最小 SoC | 5 | PCIe 详细 |
 | **E. 子系统详细** | 20-21 | GMMU + DMA + Fabric + TEE-UDD + Topology（注：重号系列，应读为子目录） | 13 | 子系统级 MVP + Roadmap |
 | **F. NSA-aware Scale-Up** | 22-31 | NSA-aware 完整 SoC + CXL + 故障注入 | 10 | NSA Stage 1-3 |
-| **G. CEP 对齐一致性架构** | 32 | CEP 框架下的一致性重设计（跨仓对齐） | 1 | 跨仓答复轮 |
-| **H. 总计** | — | — | **53** | — |
+| **G. CEP 对齐一致性架构** | 32, 41 | CEP 框架下的一致性重设计（跨仓对齐）+ CEP 债务清理提案 | 2 | 跨仓答复轮 |
+| **H. 总计** | — | — | **54** | — |
 
 ```
-总计: 1 + 10 + 12 + 5 + 13 + 10 + 1 = 52 ✅（2026-10-28 实测 `ls docs/architecture/*.md | grep -v INDEX | wc -l` = 52）
+总计: 1 + 10 + 13 + 5 + 13 + 10 + 2 = 54 ✅（2026-10-29 实测 `ls docs/architecture/*.md | grep -v INDEX | wc -l` = 54）
 
 历史漂移修正: v3.0 曾写「32 份」且分组求和为 43 —— 两者皆与实际不符;
 本版按 2026-10-21 实测校正为 45（D 组补入 19a-driver-visible-minimal-soc.md）;
