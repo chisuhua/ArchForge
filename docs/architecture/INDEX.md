@@ -1,28 +1,29 @@
 # Architecture 文档索引
 
-> **版本**: v3.2 (2026-10-27 新增 33 号 SM 操作数供给设计目标；`docs/research/` 自 CppTLM 迁入) · **范围**: `docs/architecture/` 全部 46 份文档
+> **版本**: v3.9 (2026-10-28 新增 40 号 新 ISA 规范骨架（B-0）；38/39/37 号升至 v1.1、36 号升至 v1.3 回应 Oracle 评审) · **范围**: `docs/architecture/` 全部 53 份文档
 > **关联总览**: [`../README.md`](../README.md) · **关联决策**: [`../ADR-INDEX.md`](../ADR-INDEX.md)
 
 ---
 
-## 1. 文档分组（8 大类，46 份）
+## 1. 文档分组（8 大类，47 份）
 
 | 组 | 编号 | 主题 | 份数 | 性质 |
 |----|------|------|:----:|------|
 | **A. 总览蓝图** | 00 | dGPU SoC v1.0 总架构蓝图（权威起点） | 1 | ⭐ 唯一权威总览 |
 | **B. 7 层架构分解** | 01-10 | L1..L10 各层架构 | 10 | 子系统蓝图 |
-| **C. CDNA + SM 重构 + 审计** | 11-15 | CDNA 真实 ISA / 校准 / EMU 选型 / 架构审计 / SM 重构 | 5 | 战略 + 审计 |
+| **C. CDNA + SM 重构 + 审计** | 11-15, 33-40 | CDNA 真实 ISA / 校准 / EMU 选型 / 架构审计 / SM 重构 / **OSF 设计目标 + IPC 时序附录 + 依赖管理架构 + 新 ISA 依赖层设计 + 新 ISA 设计总纲 + 新 ISA 双域结构 + 新 ISA 编译器后端 + 新 ISA 规范骨架（B-0）** | 13 | 战略 + 审计 + 设计目标 + ISA 规范 |
 | **D. PCIe 子链路** | 16-19, 19a | PCIe EP + SDMA + 入口 + 17 端口 IP 微架构 + 驱动可见最小 SoC | 5 | PCIe 详细 |
 | **E. 子系统详细** | 20-21 | GMMU + DMA + Fabric + TEE-UDD + Topology（注：重号系列，应读为子目录） | 13 | 子系统级 MVP + Roadmap |
 | **F. NSA-aware Scale-Up** | 22-31 | NSA-aware 完整 SoC + CXL + 故障注入 | 10 | NSA Stage 1-3 |
 | **G. CEP 对齐一致性架构** | 32 | CEP 框架下的一致性重设计（跨仓对齐） | 1 | 跨仓答复轮 |
-| **H. 总计** | — | — | **45** | — |
+| **H. 总计** | — | — | **53** | — |
 
 ```
-总计: 1 + 10 + 5 + 5 + 13 + 10 + 1 = 45 ✅（2026-10-21 实测 `ls docs/architecture/*.md | wc -l` = 46,扣除 INDEX.md）
+总计: 1 + 10 + 12 + 5 + 13 + 10 + 1 = 52 ✅（2026-10-28 实测 `ls docs/architecture/*.md | grep -v INDEX | wc -l` = 52）
 
 历史漂移修正: v3.0 曾写「32 份」且分组求和为 43 —— 两者皆与实际不符;
-本版按 2026-10-21 实测校正为 45（D 组补入 19a-driver-visible-minimal-soc.md）。
+本版按 2026-10-21 实测校正为 45（D 组补入 19a-driver-visible-minimal-soc.md）;
+v3.3 补入 33（2026-10-27）与 34（2026-10-28）；v3.5 补入 35、v3.6 补入 36、v3.7 补入 37、v3.8 补入 38/39、v3.9 补入 40（2026-10-28）。
 ```
 
 ---
@@ -54,7 +55,7 @@
 
 > **注**：00-overview.md 采用 L1..L7 命名；本目录 01-10 对应 L1..L10（含 NoC/Coherence/Completion 单独成层）。两组命名差异见 §6 命名约定。
 
-### C. CDNA + SM 重构 + 审计（6 份）
+### C. CDNA + SM 重构 + 审计（13 份）
 
 | 序号 | 文件 | 主题 | 状态 |
 |:----:|------|------|:----:|
@@ -63,7 +64,14 @@
 | [13](./13-cdna-emu-selector.md) | `13-cdna-emu-selector.md` | **CDNA-EMU 后端实现方案选型建议**（阶段 C 启动前决策依据） | 📋 Proposed |
 | [14](./14-stage-a-architecture-audit.md) | `14-stage-a-architecture-audit.md` | **CDNA 演进 change 架构溯源**（是否采用 CppTLM 模块搭建 + Bundle 连接） | — |
 | [15](./15-sm-microarchitecture-design.md) | `15-sm-microarchitecture-design.md` | **dGPU SoC v1.0 SM 微架构重构设计**（反转 ADR-SOC-02 黑盒） | 📋 Proposed |
-| [33](./33-sm-operand-supply-design-target.md) | `33-sm-operand-supply-design-target.md` | **SM 操作数供给下一代架构设计目标（OSF）**——MCOS 多消费者操作数槽 / ERW 弹性读窗口 / WABR 宽度自适应读 / SOP 推测供给；证据见 [`research/SM/`](../research/SM/overview.md) + [`research/SM/CudaCore/SYNTHESIS.md`](../research/SM/CudaCore/SYNTHESIS.md) | 🟡 设计目标声明 v0.3（未经评审） |
+| [33](./33-sm-operand-supply-design-target.md) | `33-sm-operand-supply-design-target.md` | **SM 操作数供给下一代架构设计目标（OSF）**——MCOS 多消费者操作数槽 / ERW 弹性读窗口 / WABR 宽度自适应读 / SOP 推测供给；证据见 [`research/SM/`](../research/SM/overview.md) + [`research/SM/CudaCore/SYNTHESIS.md`](../research/SM/CudaCore/SYNTHESIS.md) | 🟡 设计目标声明 v0.5（未经评审） |
+| [34](./34-sm-operand-supply-ipc-timing-analysis.md) | `34-sm-operand-supply-ipc-timing-analysis.md` | **SM 操作数供给 IPC 与时序分析（33 号配套附录）**——IPC 模型（3 源 vs 2 源序列）/ 读带宽口径 `W` 敏感性 / cycle 坐标时序图 / 复算脚本 | 🟡 分析附录 v1.1（未经评审） |
+| [35](./35-sm-dependence-management-architecture.md) | `35-sm-dependence-management-architecture.md` | **SM 依赖管理架构方案：五类依赖的统一框架与双后端**——RAW / WAR / WAW / 内存依赖 / 控制同步；依赖 vs 争用的四层分离；NV + CDNA 双后端；控制位与面积预算；CppTLM 落地映射 | 🟡 架构方案 v1.0（未经评审） |
+| [36](./36-new-isa-dependence-layer-design.md) | `36-new-isa-dependence-layer-design.md` | **新 ISA 依赖层设计方案：候选架构比较与推荐**——5 个候选（纯 NV / 纯 AMD / 学术 scoreboard / NV+不变式 / +硬件 tag 兜底）；机制提炼与不可照搬的约束；不变式 D-1/D-2/D-3；架构保证 A-1/A-2；ISA 可见元素清单 E-1..E-14；Q-1..Q-9 裁决记录 | 🟡 设计方案 v1.2（未经评审） |
+| [37](./37-new-isa-design-charter.md) | `37-new-isa-design-charter.md` | **新 ISA 设计总纲：定位、范围、参考 ISA 政策与路线图**——Q-8 取代关系（唯一 ISA；PTX/CDNA/SASS 降级为参考）；被取代 / 不被取代的分层；ISA 范围 v1–v3；**编译器硬依赖风险**；连锁后果清单 | 🟡 设计总纲 v1.0（未经评审） |
+| [38](./38-new-isa-dual-domain-structure.md) | `38-new-isa-dual-domain-structure.md` | **新 ISA 标量/向量双域结构：借鉴 CDNA 的 SOP*/VOP* 风格**——CDNA 双域机理剖析（可借鉴 6 条 / 不可照搬 3 条）；SGPR/VGPR + SALU/VALU + SCC/VCC 提案；跨域规则 X-D1..X-D5；依赖层分域适配；**33 号结论的适用域重划** | 🟡 设计方案 v1.0（未经评审） |
+| [39](./39-new-isa-compiler-backend.md) | `39-new-isa-compiler-backend.md` | **新 ISA 编译器后端方案：以 PTX-EMU 子集为约束的 PTX → 自研 ISA**——PTX-EMU 四层解码器与 **10 个硬缺口**；三条路线比较与推荐；**三层分工**（LLVM 前端 + 自研后端 + PTX-EMU 作 golden model）；AMDGPU 可借鉴的 6 个 pass；编译器必须产出的元数据 A-1..A-4；**§5.1 `SIInsertWaitcnts` 迁移率核查（20–30%）→"fork 是最短路径"降级为假设（B-6）** | 🟡 设计方案 v1.1（未经评审） |
+| [40](./40-new-isa-spec-skeleton.md) | `40-new-isa-spec-skeleton.md` | **新 ISA 规范骨架（B-0）**——执行模型（wave 32 / EXEC / 发散栈 + 显式 `JOIN` / `VP[8]` 谓词文件）；架构寄存器（SGPR 128 = 124+4 保留 / VGPR 256）；**编码（`fmt` 8 类、48/64 双长度、8 种形态全部恰好填满、控制块向量 21 / 标量 16 bit）**；依赖层不变式 D-1/D-1′/D-2/D-3；内存模型最小规范；双域规则 X-D1..X-D5；TBD 注册表 T-1..T-9 | 🟡 **规范骨架 v1.0 DRAFT**（冻结前置已闭合，待签批） |
 
 ### D. PCIe 子链路（4 份）
 
@@ -149,9 +157,17 @@
 [15-sm-microarchitecture-design.md]        ← 5. SM 重构（v1.0 关键）
 [19-pcie-ip-microarchitecture.md]          ← 6. PCIe IP（v1.0 关键）
 [32-cep-based-coherence-architecture.md]   ← 7. 一致性架构（CEP 对齐，含 SoC 内 + NSA 跨卡收敛）
+[33-sm-operand-supply-design-target.md]     ← 8. SM 操作数供给设计目标（OSF，🟡 DRAFT）
+[34-sm-operand-supply-ipc-timing-analysis.md]← 9. OSF 的 IPC 模型与时序推导（33 号配套附录）
+[35-sm-dependence-management-architecture.md]← 10. OSF 的五类依赖管理架构方案
+[36-new-isa-dependence-layer-design.md]← 11. 新 ISA 的依赖层设计方案（候选比较 + 推荐）
+[37-new-isa-design-charter.md]← 12. 新 ISA 设计总纲（定位 / 范围 / 参考政策 / 路线图）
+[38-new-isa-dual-domain-structure.md]← 13. 新 ISA 的标量/向量双域结构
+[39-new-isa-compiler-backend.md]← 14. 新 ISA 的编译器后端方案（PTX/LLVM → 自研 ISA）
+[40-new-isa-spec-skeleton.md]← 15. 新 ISA 规范骨架（B-0：架构状态 / 编码 / 依赖层契约）
 
-[../ADR-INDEX.md]                          ← 8. 决策追溯
-[../microarchitecture/README.md]                     ← 9. 模块索引
+[../ADR-INDEX.md]                          ← 16. 决策追溯
+[../microarchitecture/README.md]                     ← 17. 模块索引
 ```
 
 ### 3.2 实现者（某一层 / 某一模块）
@@ -189,6 +205,9 @@
 | `20-` | GART/GMMU 系列（重号，3 份） | 3 |
 | `21-` | MAS-3.1 SoC 拓扑系列（重号，10 份） | 10 |
 | `22-` .. `31-` | NSA-aware 系列 | 10 |
+| `32-` | CEP 对齐一致性架构 | 1 |
+| `33-` | SM 操作数供给设计目标（OSF） | 1 |
+| `34-` | SM 操作数供给 IPC 与时序分析（33 号附录） | 1 |
 
 ### 4.2 重号系列说明（⚠️ 命名冲突）
 
@@ -275,6 +294,13 @@ architecture/
 
 | 日期 | 版本 | 修订 |
 |------|------|------|
+| 2026-10-28 | v3.9 | 新增 40 号《新 ISA 规范骨架（B-0）》；36 号 v1.3（Q-10 控制块按域裁剪 21/16 bit、Q-11 WAR 改由写者 stall 表达、§4.5 按 7/8-bit 字段重算编码表、E-3/E-7/E-14 补全）；38 号 v1.1（动机排序、SGPR 保留集枚举、删"标量 32-bit"、VCC 迁出 SGPR）；39 号 v1.1（fork 降级为假设 + B-6、元数据表同步）；37 号 v1.1（新增 C-7）；分组 C 扩为 13 份；总数 53 |
+| 2026-10-28 | v3.8 | 新增 38 号《新 ISA 标量/向量双域结构》+ 39 号《新 ISA 编译器后端方案》；33/34 号补「向量域」适用域限定；37 号 §3.1 范围表拆标量/向量两行；分组 C 扩为 12 份；总数 52 |
+| 2026-10-28 | v3.7 | 新增 37 号《新 ISA 设计总纲》（Q-8 取代关系的落地：范围 / 参考 ISA 政策 / 编译器硬依赖 / 连锁后果）；36 号升至 v1.2（Q-7/Q-8/Q-9 落定）；分组 C 扩为 10 份；总数 50 |
+| 2026-10-28 | v3.6 | 新增 36 号《新 ISA 依赖层设计方案：候选架构比较与推荐》；33/35 号加交叉指针；分组 C 扩为 9 份；总数 49 |
+| 2026-10-28 | v3.5 | 新增 35 号《SM 依赖管理架构方案：五类依赖的统一框架与双后端》；33 号 §5 加指针；分组 C 扩为 8 份；总数 48 |
+| 2026-10-28 | v3.4 | 33 号升至 **v0.5**（开放项裁决：`W=2` / `d=1` / WAR 依赖计数器）+ 34 号升至 v1.1；上游「5/6/7」误读回写 |
+| 2026-10-28 | v3.3 | 新增 34 号《SM 操作数供给 IPC 与时序分析》（33 号配套附录）；33 号升至 v0.4；分组 C 扩为 7 份；总数 47 |
 | 2026-09-23 | v3.0 | ArchForge 重整：新建本文档；按 7 大类重新分组；显式标注重号系列 |
 | 2027-02-09 | v2.x | `00-overview.md` v3.1 PASS（per `architecture/00-overview.md` §10） |
 | 2026-06-12 | v1.0 | 早期架构文档创建 |
