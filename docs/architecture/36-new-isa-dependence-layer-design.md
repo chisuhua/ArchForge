@@ -288,6 +288,7 @@ t(W) − t(R) = (slot(W) − slot(R)) + (A(W) − A(R))
 3. 若无公共支配点且不允许插指令 ⇒ **该依赖不得用 `stall` 表达**，改由 **SB 槽 + `wait_mask`** 承担。
 
 > **⇒ 与本节推导的关系**：上面的 `t(k) = slot(k) + A(k)` 是**单路径直线代码**的模型；本小节给出它在 CFG 上的**必要修正条件**（承载点 + 跨路径取最大），**推导本身不变**。
+> **⇒ 与「两类义务的合成」（S-DEP-2b）的衔接**：**附录 B 检查 16 要求每条义务的承载者都在支配点上** ⇒ **gap 内的 stall 计数与路径无关** ⇒ 因此 **S-DEP-2b 的单路径算术在多路径下自动成立**，**无需**把它推广成「每义务对每路径求 min Σ」（纯复杂度，无收益）。
 
 #### 实例级义务（**编译器必须逐条满足**）
 
@@ -361,11 +362,13 @@ assert ok1 and ok2
 # 静态序列：slot0=P(L_w=4)  slot1=X(承载 stall=3，位于 uniform 分支的未取侧)  slot2=C
 # 语义：t(下一条) = t(本条) + 1 + stall(本条)   [after-issue]
 def issue_times(seq):
-    """seq: [(slot, stall)] 按发射顺序；返回 {slot: 发射时刻}"""
-    t, prev = {}, None
+    """seq: [(slot, stall)] 按发射顺序；stall 是【本指令携带】的延迟量。
+       after-issue 语义：t(下一条) = t(本条) + 1 + stall(本条)
+       ⇒ 计算 t(cur) 时必须用【前驱】的 stall（不是自己的）。"""
+    t, prev_t, prev_st = {}, None, 0
     for slot, st in seq:
-        t[slot] = 0 if prev is None else prev + 1 + st
-        prev = t[slot]
+        t[slot] = 0 if prev_t is None else prev_t + 1 + prev_st
+        prev_t, prev_st = t[slot], st
     return t
 
 L_W = 4
@@ -380,7 +383,7 @@ tD = issue_times([(0, 0), (1, 3), (2, 0)])
 okD = tD[2] >= tD[0] + L_W
 print()
 print(f"情形A uniform未取 t(P)={tA[0]}  t(C)={tA[2]}  P可见={tA[0]+L_W}  C读起点={tA[2]}  -> {'OK' if okA else 'FAIL <-- 陈旧值'}")
-print(f"情形B X发射      t(P)={tB[0]}  t(C)={tB[2]}  P可见={tB[0]+L_W}  C读起点={tB[2]}  -> {'OK' if okB else 'FAIL'}")
+print(f"情形B X发射      t(P)={tB[0]}  t(X)={tB[1]}  t(C)={tB[2]}  P可见={tB[0]+L_W}  C读起点={tB[2]}  -> {'OK' if okB else 'FAIL'}")
 print(f"改到支配点后     t(P)={tD[0]}  t(C)={tD[2]}  P可见={tD[0]+L_W}  C读起点={tD[2]}  -> {'OK' if okD else 'FAIL'}")
 assert (not okA) and okB and okD
 ```
@@ -402,7 +405,7 @@ d   stall落点   t(R)  t(W)  R锁存   W可见   安全?
 校验       O2 累计=5 >= 5 -> OK
 
 情形A uniform未取 t(P)=0  t(C)=1  P可见=4  C读起点=1  -> FAIL <-- 陈旧值
-情形B X发射      t(P)=0  t(C)=5  P可见=4  C读起点=5  -> OK
+情形B X发射      t(P)=0  t(X)=1  t(C)=5  P可见=4  C读起点=5  -> OK
 改到支配点后     t(P)=0  t(C)=5  P可见=4  C读起点=5  -> OK
 ```
 

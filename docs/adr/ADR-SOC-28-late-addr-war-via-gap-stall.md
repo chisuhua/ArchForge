@@ -129,7 +129,7 @@ NVIDIA 用 WAR 计数器，是因为它的 WAR 释放点是**硬件内部行为*
 ## 7. 参考
 
 - [`36-new-isa-dependence-layer-design.md`](../architecture/36-new-isa-dependence-layer-design.md) §4.1.5（late-addr 类的净效果分析）、**§4.1.6（推导 + 机械化验证脚本）**、§7（Q-1 / Q-9 / Q-11 裁决记录）
-- [`40-new-isa-spec-skeleton.md`](../architecture/40-new-isa-spec-skeleton.md) §4.1（D-1′）、§4.2（stall 语义 + S-DEP-2a/2b）、§4.5（S-DEP-6a/6b）、§8 T-5、附录 B 检查 13/14
+- [`40-new-isa-spec-skeleton.md`](../architecture/40-new-isa-spec-skeleton.md) §4.1（D-1′）、§4.2（stall 语义 + S-DEP-2a/2b/**2c**）、§4.5（S-DEP-6a/6b）、§8 T-5、附录 B 检查 13/14/**16**
 - [`33-sm-operand-supply-design-target.md`](../architecture/33-sm-operand-supply-design-target.md) §5.1 C-5（**仅 NV 建模后端**的 WAR 计数器口径）
 - arXiv:2503.20481 Table 2（NVIDIA `LDG.32` regular 的 WAR 释放点 = +11 拍 —— 本 ADR `D_mem = 11` 的来源）
 - [`ADR-SOC-27`](./ADR-SOC-27-compiler-driven-dependence-management.md)（父决策：控制块与不变式体系）

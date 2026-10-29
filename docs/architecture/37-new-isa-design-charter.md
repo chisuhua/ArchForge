@@ -160,7 +160,7 @@ NVIDIA 有 **ptxas**（NVCC 后端）十余年打磨；AMD 有 **LLVM AMDGPU 后
 | **1** | **ADR-SOC-15**（CDNA 真实 ISA 路线图） | **签发 superseding ADR**：Phase C（CDNA 引擎接入）→ **新 ISA 前端**；阶段 A（契约中立化）/ B（内存 Seam）**保留**（它们是 timing 宿主的前置，与 ISA 无关） | 架构评审 |
 | **2** | **11 号**（双轨前端 + 统一 timing 宿主） | 标题与正文**去 CDNA 化**：改为"**新 ISA 前端 + 统一 timing 宿主**"；§11.2.1 的 `InstrDescriptor` 契约**保留并扩展**（加 **21 / 16 bit** 依赖控制块） | 文档修订 |
 | **3** | **13 号**（CDNA-EMU 选型） | **标记作废**（不再选 CDNA-EMU）；其调研结论可回收为"CDNA ISA 语义参考" | 文档修订 |
-| **4** | **12 号**（CDNA 校准基线） | **对标对象变更**：CDNA 硬件 → **NVIDIA/AMD 公开实测延迟表**（Volta Table 4.1 延迟分档 + Ampere §5.3 读窗/气泡 + Table 2 访存延迟）；**方法论（M1–M4 校准闭环）保留** | 文档修订 |
+| **4** | **12 号**（CDNA 校准基线） | **对标对象变更**：CDNA 硬件 → **NVIDIA/AMD 公开实测延迟表**（Volta Table 4.1 延迟分档 + Ampere §5.3 读窗/气泡 + Table 2 访存延迟）；**方法论保留**（**12 号的 microbenchmark 类 `M1–M4` 校准闭环** —— 12 号方法论编号，**与本仓的 `K-1..K-4`（36 号机制族）/ `M-1..M-4`（39 号算法族）两套编号均无关**） | 文档修订 |
 | **5** | **ADR-SOC-09**（双 vendor）〔✅ **已由 ADR-SOC-26 §2 D5 裁决**〕 | 语义**降级**：从"支持双 vendor ISA"改为"**双 vendor 实测数据作行为基线**"；SoC 硬件建模目标不变 | 文档修订（**需评审确认**） |
 | **6** | **`isa_type` 配置** | 从多值 → **单值 + 回放模式**（ADR-SOC-15 D5 的配置结构保留） | 实现 |
 | **7** | **ADR-SOC-16（SM 微架构重构，Accepted）** | ⚠ **接缝未闭合**：SOC-16 的启动前提写明「CDNA Real ISA 集成（ADR-SOC-15）启动后」，且其 12 子模块含 `MatrixCore = CDNA MFMA 子集（per 13 号）` ⇒ **Q-8 动摇了它的前提与一个子模块的内容来源**。**处置原则（按本仓 supersede 先例，见 ADR-SOC-16 反转 ADR-SOC-02 的做法）**：**12 子模块的 timing 宿主结构保留**（它是 ISA 中立的），**CDNA 特定内容（MFMA 子集、CDNA 延迟类）降级为「参考实现」并随新 ISA 前端替换**。⇒ **需 superseding ADR 明确这一点**（与 C-1 合并起草） | 架构评审（**与 C-1 合并**） |
