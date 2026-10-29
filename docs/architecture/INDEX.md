@@ -1,11 +1,11 @@
 # Architecture 文档索引
 
-> **版本**: v3.10 (2026-10-29 新增 41 号《CEP 对齐的债务清理与改进提案》—— 7 项债务 + 建议 diff + 追认清单) · **范围**: `docs/architecture/` 全部 54 份文档
+> **版本**: v3.11 (2026-10-29 移除 41 号《CEP 对齐的债务清理与改进提案》—— 债务清单迁入 rdd-workflow 改进提案 `cep-alignment-debt-cleanup`) · **范围**: `docs/architecture/` 全部 53 份文档
 > **关联总览**: [`../README.md`](../README.md) · **关联决策**: [`../ADR-INDEX.md`](../ADR-INDEX.md)
 
 ---
 
-## 1. 文档分组（8 大类，47 份）
+## 1. 文档分组（8 大类，53 份）
 
 | 组 | 编号 | 主题 | 份数 | 性质 |
 |----|------|------|:----:|------|
@@ -15,15 +15,15 @@
 | **D. PCIe 子链路** | 16-19, 19a | PCIe EP + SDMA + 入口 + 17 端口 IP 微架构 + 驱动可见最小 SoC | 5 | PCIe 详细 |
 | **E. 子系统详细** | 20-21 | GMMU + DMA + Fabric + TEE-UDD + Topology（注：重号系列，应读为子目录） | 13 | 子系统级 MVP + Roadmap |
 | **F. NSA-aware Scale-Up** | 22-31 | NSA-aware 完整 SoC + CXL + 故障注入 | 10 | NSA Stage 1-3 |
-| **G. CEP 对齐一致性架构** | 32, 41 | CEP 框架下的一致性重设计（跨仓对齐）+ CEP 债务清理提案 | 2 | 跨仓答复轮 |
-| **H. 总计** | — | — | **54** | — |
+| **G. CEP 对齐一致性架构** | 32 | CEP 框架下的一致性重设计（跨仓对齐） | 1 | 跨仓答复轮 |
+| **H. 总计** | — | — | **53** | — |
 
 ```
-总计: 1 + 10 + 13 + 5 + 13 + 10 + 2 = 54 ✅（2026-10-29 实测 `ls docs/architecture/*.md | grep -v INDEX | wc -l` = 54）
+总计: 1 + 10 + 13 + 5 + 13 + 10 + 1 = 53 ✅（2026-10-29 实测 `ls docs/architecture/*.md | grep -v INDEX | wc -l` = 53）
 
 历史漂移修正: v3.0 曾写「32 份」且分组求和为 43 —— 两者皆与实际不符;
 本版按 2026-10-21 实测校正为 45（D 组补入 19a-driver-visible-minimal-soc.md）;
-v3.3 补入 33（2026-10-27）与 34（2026-10-28）；v3.5 补入 35、v3.6 补入 36、v3.7 补入 37、v3.8 补入 38/39、v3.9 补入 40（2026-10-28）。
+v3.3 补入 33（2026-10-27）与 34（2026-10-28）；v3.5 补入 35、v3.6 补入 36、v3.7 补入 37、v3.8 补入 38/39、v3.9 补入 40（2026-10-28）；v3.11 移除 41（2026-10-29 —— 债务清单迁入 rdd-workflow 改进提案 `.rddf/improvements/cep-alignment-debt-cleanup.md`，不再以架构文档形态承载）。
 ```
 
 ---
@@ -130,12 +130,11 @@ v3.3 补入 33（2026-10-27）与 34（2026-10-28）；v3.5 补入 35、v3.6 补
 | [30](./30-nsa-comprehensive-supplement.md) | `30-nsa-comprehensive-supplement.md` | **NSA-Compat**: NSA-aware Scale-Up 综合补充规范 v0.1 (Oracle 评审响应) | Draft v0.1 |
 | [31](./31-nsa-fault-injection-plan.md) | `31-nsa-fault-injection-plan.md` | **NSA-FIT**: NSA-aware Scale-Up 故障注入测试计划 v0.1 | Draft v0.1 |
 
-### G. CEP 对齐一致性架构（2 份）
+### G. CEP 对齐一致性架构（1 份）
 
 | 序号 | 文件 | 主题 | 状态 |
 |:----:|------|------|:----:|
 | [32](./32-cep-based-coherence-architecture.md) | `32-cep-based-coherence-architecture.md` | **CEP-Coh**: CEP 框架下的 dGPU SoC + NSA 多卡一致性重设计（提问单审阅 8 项发现 + 体系 A/B 收敛诊断 + CEP 分层映射 + 3 域重划 + 2 个协议实例声明 + P0-3 映射表 + 6 问答复 + R-1~R-12 需求单） | 📋 Draft v0.1 |
-| [41](./41-cep-alignment-debt-cleanup-proposal.md) | `41-cep-alignment-debt-cleanup-proposal.md` | **CEP-Debt**: CEP 对齐的债务清理与改进提案 v0.1（7 项债务登记 D1~D7 + 5 组建议 diff + 逐格追认清单 + 处置顺序；来自 CppTLM 跨仓请求，队列 #9 R-1 阻塞处置） | 📋 Draft v0.1 |
 
 ---
 
@@ -295,6 +294,7 @@ architecture/
 
 | 日期 | 版本 | 修订 |
 |------|------|------|
+| 2026-10-29 | v3.11 | 移除 41 号《CEP 对齐的债务清理与改进提案》（7 项债务 D1~D7 + 建议 diff + 逐格追认清单迁入 rdd-workflow 改进提案 `.rddf/improvements/cep-alignment-debt-cleanup.md`；随架构文档形态承载的工作项改为可跟踪的改进提案）；分组 G 缩为 1 份；总数 53 |
 | 2026-10-29 | v3.10 | 新增 41 号《CEP 对齐的债务清理与改进提案》（7 项债务 D1~D7 + 5 组建议 diff + 逐格追认清单 + 处置顺序；CppTLM 跨仓请求）
 | 2026-10-28 | v3.9 | 新增 40 号《新 ISA 规范骨架（B-0）》；36 号 v1.3（Q-10 控制块按域裁剪 21/16 bit、Q-11 WAR 改由写者 stall 表达、§4.5 按 7/8-bit 字段重算编码表、E-3/E-7/E-14 补全）；38 号 v1.1（动机排序、SGPR 保留集枚举、删"标量 32-bit"、VCC 迁出 SGPR）；39 号 v1.1（fork 降级为假设 + B-6、元数据表同步）；37 号 v1.1（新增 C-7）；分组 C 扩为 13 份；总数 53 |
 | 2026-10-28 | v3.8 | 新增 38 号《新 ISA 标量/向量双域结构》+ 39 号《新 ISA 编译器后端方案》；33/34 号补「向量域」适用域限定；37 号 §3.1 范围表拆标量/向量两行；分组 C 扩为 12 份；总数 52 |
