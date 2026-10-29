@@ -107,6 +107,30 @@ type: debt
 9. **跨仓动作登记** —— ① CppTLM 侧 `protocol_instances.json` 的 `authority_migrations[mesif]` 条目在追认完成后**应降级/删除**（该降级动作未机器化，需 CppTLM 人工裁决 + 台账 entry ⇒ 本仓无权闭环，登记为跨仓待办）；② CppTLM `openspec/changes/cpptlm-cep-mesif-state-spec/tasks.md` 任务 4.2 指向的 ArchForge 载体（已删除的 41 号）改指本改进提案。
 10. **41 号文档移除 + 索引同步** —— 删除 `docs/architecture/41-cep-alignment-debt-cleanup-proposal.md`；`docs/architecture/INDEX.md` 总数 54 → 53、G 组 2 → 1、维护记录追加 v3.11。
 
+## 追认输入（2026-10-29，CppTLM 侧已产出）
+
+CppTLM 侧的**规约层** change `cpptlm-cep-mesif-state-spec` 已完成 Phase 1~3，**逐格追认的输入已就位** ⇒ 本提案的 **AC-7**（`32 号` 回填 MESIF 5 态 × 6 事件转换表 + 5→4 投影表）**具备回填条件**。
+
+| 产物 | 位置（CppTLM 仓） | 内容 |
+|------|------------------|------|
+| **规范性载体** | `include/tlm/cep/mesif_state_spec.hh` | 30 格转换表 + 5 格投影表，**每格**带 `basis{kind, pending, ref, note}`；`kind ∈ {Primary, Structural, Derived, Analogical}` |
+| **逐格追认清单** | `docs/implementation/2026-10-29-cep-mesif-state-spec-recognition-checklist.md` | **由载体直接生成** ⇒ 与载体零漂移（机器判据 `MS-06` 逐格核对） |
+| **推导口径** | `openspec/changes/cpptlm-cep-mesif-state-spec/design.md`（`D-ε.1` ~ `D-ε.11`） | 建模约定 C1~C6 · 依据强度分级 · 偏离清单 · 2 项语义损失 · 秩的精确口径 |
+
+**追认刻度（机器可查）**：待追认 **31 / 35** 格；一手原文 **4 / 35** 格（转换表 3 + 投影表 1）。第 ① 档（一手原文）**无需追认**，仅需确认未被推翻；**第 ②/③ 档（推导 / 类比）需逐格确认或纠正**。
+
+**与本提案 D4 / D5 / D7 的对应**：
+
+| 本提案债务 | CppTLM 侧的对应产出 | 追认动作 |
+|------------|-------------------|----------|
+| **D4** MESIF 状态机规约缺失 | 30 格转换表（`basis` 逐格带锚点） | 逐格确认或纠正（重点：`F` 行的 5 格 + 4 条相对 CHI 的**偏离**） |
+| **D5** MESIF 5→4 投影表缺失 | 5 格投影表（`F→WRITEBACK` 是一手原文，其余 4 态为 MOESI 6→4 表的**状态同义迁移**） | 确认 4 态投影 + 确认 `F` 的原文仍成立 |
+| **D7** MESIF 侧语义损失未登记 | 2 项登记：`F`/`M` 同投影 `WRITEBACK`（**可由 Sharer Tracker 补偿** —— `mesif` 的 `sharer_tracker = HierarchicalDirectory`，caps `EXACT` + `GLOBAL`）＋ 次生的 `F → E` **秩回落** | 确认措辞与 MOESI 的 `O`/`M` 损失**可区分**（本仓 `chi_rnf` 的同类合并是**不可补偿**的 —— 措辞不得混用） |
+
+**偏离清单（追认优先级最高，8 条）**：`I+SnpShared`（CHI `→SC` vs 本表 `→I`）· `E+SnpShared`（CHI `→SC` vs 本表 **`→F`**，MESIF Forward 语义）· `S+RdUnique`（CHI `→SC` vs 本表 `→E`，MESIF 目录语义）· `F` 行的 5 格（**CHI 无对应态**）。
+
+⚠️ **口径边界**：CppTLM 侧的判据锁**完备性 / 可审计性 / 待追认标记 / 内部自洽**，**不**锁推导值的**语义正确性** ⇒ 未追认的值**带着 `pending` 标记**留在规约里，**不**被固化为「既定事实」⇒ **投影表回填前不得据此写实现层判据**。
+
 ## Acceptance
 
 - [ ] **AC-1** `32 号 §6.2` 的 `mesif.sharer_tracker` == `{impl: HierarchicalDirectory, caps: SYSTEM/EXACT/GLOBAL/HIERARCHICAL}`；`mesif` 声明块内 `SparseSnoopFilter` / `CONSERVATIVE` / `"aggregation_at": "HOME"` **零命中**
